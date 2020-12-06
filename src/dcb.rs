@@ -1,4 +1,3 @@
-use crate::error::*;
 use std::sync::atomic::{AtomicU8, Ordering};
 
 struct DstCtrlBlock {
@@ -50,6 +49,7 @@ impl DstCtrlBlock {
         let result = self
             .next_forward_hop
             .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |x| {
+                // TODO: more elegant way? 
                 if x <= self.forward_horizon.load(Ordering::SeqCst) {
                     Some(x + 1)
                 } else {

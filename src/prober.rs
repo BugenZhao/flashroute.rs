@@ -92,6 +92,8 @@ impl Prober {
 
         ip_packet.set_payload(udp_packet.packet());
 
+        // TODO: is it ok to ignore checksums?
+
         return ip_packet.consume_to_immutable();
     }
 
@@ -116,6 +118,8 @@ impl Prober {
                 return Err(Error::UnexpectedIcmpPacket(icmp_type, icmp_code));
             }
         };
+
+        // TODO: extract more data for debug use
 
         let result = ProbeResult {
             destination: res_ip_packet.get_destination(),
@@ -150,4 +154,5 @@ mod test {
     }
 
     // TODO: add more realistic tests
+    // TODO: add tests for parsing
 }
