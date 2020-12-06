@@ -92,10 +92,26 @@ mod test {
     fn test_forward_task() {
         let mut dcb = DstCtrlBlock::new(3);
         assert_eq!(dcb.pull_forward_task(), None);
-        
         dcb.set_forward_horizon(5);
         assert_eq!(dcb.pull_forward_task(), Some(4));
         assert_eq!(dcb.pull_forward_task(), Some(5));
+        assert_eq!(dcb.pull_forward_task(), None);
+    }
+
+    #[test]
+    fn test_stop_backward_task() {
+        let mut dcb = DstCtrlBlock::new(3);
+        assert_eq!(dcb.pull_backward_task(), Some(3));
+        dcb.stop_backward();
+        assert_eq!(dcb.pull_backward_task(), None);
+    }
+
+    #[test]
+    fn test_stop_forward_task() {
+        let mut dcb = DstCtrlBlock::new(3);
+        dcb.set_forward_horizon(5);
+        assert_eq!(dcb.pull_forward_task(), Some(4));
+        dcb.stop_forward();
         assert_eq!(dcb.pull_forward_task(), None);
     }
 }
