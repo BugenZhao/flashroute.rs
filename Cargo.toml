@@ -14,4 +14,5 @@ thiserror = "1.0"
 pnet = "0.27"
 structopt = "0.3"
 ipnet = "2.3"
-
+log = "0.4"
+env_logger = "0.8"

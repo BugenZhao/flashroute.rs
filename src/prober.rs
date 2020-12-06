@@ -94,6 +94,7 @@ impl Prober {
     }
 }
 
+#[cfg(test)]
 mod test {
     use super::*;
 

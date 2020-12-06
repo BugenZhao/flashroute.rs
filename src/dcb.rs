@@ -76,6 +76,7 @@ impl DstCtrlBlock {
     }
 }
 
+#[cfg(test)]
 mod test {
     use super::DstCtrlBlock;
 
