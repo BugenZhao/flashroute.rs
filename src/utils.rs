@@ -1,4 +1,7 @@
-use std::net::IpAddr;
+use std::{
+    net::IpAddr,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use pnet::datalink::NetworkInterface;
 
@@ -35,4 +38,11 @@ pub fn get_interface(name: &str) -> Result<NetworkInterface> {
             .next()
             .ok_or(Error::NoSuchInterface)
     }
+}
+
+pub fn get_timestamp_ms_u16() -> u16 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u16
 }
