@@ -81,6 +81,7 @@ version = "0.1.0"
 dependencies = [
  "env_logger",
  "ipnet",
+ "lazy_static",
  "log 0.4.11",
  "pnet",
  "structopt",

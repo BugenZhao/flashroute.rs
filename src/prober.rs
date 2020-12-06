@@ -137,10 +137,17 @@ impl Prober {
 mod test {
     use super::*;
 
+    lazy_static! {
+        static ref IP1: Ipv4Addr = "1.2.3.4".parse().unwrap();
+        static ref IP2: Ipv4Addr = "4.3.2.1".parse().unwrap();
+    }
+
     #[test]
     fn test_pack() {
         let prober = Prober::new(|_| {}, ProbePhase::Pre, 33434, "hello".to_owned(), true);
-        let packet = prober.pack(("1.2.3.4".parse().unwrap(), 32), "4.3.2.1".parse().unwrap());
+        let packet = prober.pack((*IP1, 32), *IP2);
         println!("{:#?}", packet);
     }
+
+    // TODO: add more realistic tests
 }
