@@ -9,3 +9,5 @@ edition = "2018"
 [dependencies]
 thiserror = "1.0"
 pnet = "0.27.0"
+structopt = "0.3"
+lazy_static = "*"

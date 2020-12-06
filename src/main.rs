@@ -1,3 +1,8 @@
+mod opt;
+
+use opt::Opt;
+pub use structopt::StructOpt;
+
 fn main() {
-    println!("Hello, world!");
+    println!("{:#?}", Opt::from_args());
 }
