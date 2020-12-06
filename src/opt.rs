@@ -18,7 +18,7 @@ pub struct Opt {
     pub probing_rate: u32,
 
     // Connection
-    #[structopt(long, parse(try_from_str = utils::get_interface), default_value = "en0")]
+    #[structopt(long, parse(try_from_str = utils::get_interface), default_value = "")]
     pub interface: pnet::datalink::NetworkInterface,
     #[structopt(long, default_value = "33434")]
     pub dst_port: u16,
