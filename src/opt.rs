@@ -1,36 +1,41 @@
 use std::path::PathBuf;
-
 use structopt::StructOpt;
+
+use crate::utils;
 
 #[derive(Debug, StructOpt)]
 pub struct Opt {
     // Preprobing
     #[structopt(long, default_value = "32")]
-    preprobing_ttl: u16,
+    pub preprobing_ttl: u16,
     #[structopt(long, default_value = "5")]
-    proximity_span: u32,
+    pub proximity_span: u32,
 
     // Probing
     #[structopt(long, default_value = "16")]
-    split_ttl: u16,
+    pub split_ttl: u16,
     #[structopt(long, default_value = "400000")]
-    probing_rate: u32,
-    #[structopt(long, default_value = "How are you?")]
-    payload_message: String,
+    pub probing_rate: u32,
+
+    // Connection
+    #[structopt(long, parse(try_from_str = utils::get_interface), default_value = "en0")]
+    pub interface: pnet::datalink::NetworkInterface,
     #[structopt(long, default_value = "33434")]
-    dst_port: u16,
+    pub dst_port: u16,
     #[structopt(long, default_value = "53")]
-    src_port: u16,
+    pub src_port: u16,
+    #[structopt(long, default_value = "How are you?")]
+    pub payload_message: String,
 
     // Output
     #[structopt(short, long, default_value = "fr.out")]
-    output: PathBuf,
+    pub output: PathBuf,
 
     // Misc
     #[structopt(long, default_value = "114514")]
-    seed: i32,
+    pub seed: i32,
 
     // Target
-    #[structopt(default_value = "115.159.1.64")]
-    target: String,
+    #[structopt(default_value = "115.159.1.0/24")]
+    pub target: ipnet::Ipv4Net,
 }

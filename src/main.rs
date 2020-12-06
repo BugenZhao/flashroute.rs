@@ -1,8 +1,11 @@
+mod error;
 mod opt;
+mod utils;
 
 use opt::Opt;
 pub use structopt::StructOpt;
 
 fn main() {
-    println!("{:#?}", Opt::from_args());
+    let opt: Opt = Opt::from_args();
+    println!("{:#?}", opt);
 }
