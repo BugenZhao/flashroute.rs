@@ -144,6 +144,7 @@ mod test {
     lazy_static! {
         static ref IP1: Ipv4Addr = "1.2.3.4".parse().unwrap();
         static ref IP2: Ipv4Addr = "4.3.2.1".parse().unwrap();
+        // static ref PACKET: &'static [u8] = include_bytes!("../res/packet.bin");
     }
 
     #[test]
