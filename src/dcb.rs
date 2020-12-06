@@ -75,3 +75,27 @@ impl DstCtrlBlock {
         self.forward_horizon.fetch_min(0, Ordering::SeqCst);
     }
 }
+
+mod test {
+    use super::DstCtrlBlock;
+
+    #[test]
+    fn test_backward_task() {
+        let mut dcb = DstCtrlBlock::new(3);
+        assert_eq!(dcb.pull_backward_task(), Some(3));
+        assert_eq!(dcb.pull_backward_task(), Some(2));
+        assert_eq!(dcb.pull_backward_task(), Some(1));
+        assert_eq!(dcb.pull_backward_task(), None);
+    }
+
+    #[test]
+    fn test_forward_task() {
+        let mut dcb = DstCtrlBlock::new(3);
+        assert_eq!(dcb.pull_forward_task(), None);
+        
+        dcb.set_forward_horizon(5);
+        assert_eq!(dcb.pull_forward_task(), Some(4));
+        assert_eq!(dcb.pull_forward_task(), Some(5));
+        assert_eq!(dcb.pull_forward_task(), None);
+    }
+}
