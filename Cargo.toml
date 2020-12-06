@@ -1,7 +1,10 @@
 [package]
 name = "flashroute_rs"
 version = "0.1.0"
-authors = ["Bugen Zhao <i@bugenzhao.com>", "Zhengdong Wang <lnwzd2009@sjtu.edu.cn>"]
+authors = [
+    "Bugen Zhao <i@bugenzhao.com>",
+    "Zhengdong Wang <lnwzd2009@sjtu.edu.cn>",
+]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -9,3 +12,5 @@ edition = "2018"
 [dependencies]
 thiserror = "1.0"
 pnet = "0.27.0"
+structopt = "0.3"
+ipnet = "2.3"
