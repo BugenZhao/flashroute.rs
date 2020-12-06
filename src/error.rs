@@ -4,8 +4,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("")]
-    NoSuchInterface,
+    #[error("cannot find interface `{0}`")]
+    NoSuchInterface(String),
     #[error("parse error")]
     ParseError,
     #[error("unexpected icmp packet with type `{0:?}` and code `{1:?}`")]
