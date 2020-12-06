@@ -1,6 +1,9 @@
+#![allow(dead_code)]
+
 mod error;
 mod opt;
 mod utils;
+mod dcb;
 
 use opt::Opt;
 pub use structopt::StructOpt;
