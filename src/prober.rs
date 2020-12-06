@@ -1,5 +1,5 @@
-extern crate pnet;
-use pnet::packet::{ip::IpNextHeaderProtocols, ipv4::*, udp::*, Packet};
+use crate::error::*;
+use pnet::packet::{icmp::*, ip::IpNextHeaderProtocols, ipv4::*, udp::*, Packet};
 use std::net::Ipv4Addr;
 
 #[derive(Default)]
@@ -19,7 +19,7 @@ pub enum ProbePhase {
     Main = 1,
 }
 
-pub type ProbeCallback = fn(result: ProbeResult);
+pub type ProbeCallback = fn(result: ProbeResult) -> ();
 
 pub struct Prober {
     callback: ProbeCallback,
@@ -31,6 +31,7 @@ pub struct Prober {
 
 impl Prober {
     const IPV4_HEADER_LENGTH: u16 = 20;
+    const ICMP_HEADER_LENGTH: u16 = 8;
 
     pub fn new(
         callback: ProbeCallback,
@@ -52,7 +53,7 @@ impl Prober {
 pub type ProbeUnit = (Ipv4Addr, u8);
 
 impl Prober {
-    pub fn pack(&self, destination: ProbeUnit, source_ip: Ipv4Addr) -> Option<Ipv4Packet> {
+    pub fn pack(&self, destination: ProbeUnit, source_ip: Ipv4Addr) -> Ipv4Packet {
         let (dst_ip, ttl) = destination;
         let timestamp = crate::utils::get_timestamp_ms_u16();
         let expect_total_size = {
@@ -64,7 +65,7 @@ impl Prober {
         };
         let expect_udp_size = expect_total_size - Self::IPV4_HEADER_LENGTH;
 
-        let mut udp_packet = MutableUdpPacket::owned(vec![0u8; expect_udp_size as usize])?;
+        let mut udp_packet = MutableUdpPacket::owned(vec![0u8; expect_udp_size as usize]).unwrap();
         udp_packet.set_source(8888); // TODO: what's the port?
         udp_packet.set_destination(self.dst_port);
         udp_packet.set_length(expect_udp_size);
@@ -78,7 +79,8 @@ impl Prober {
             id
         };
 
-        let mut ip_packet = MutableIpv4Packet::owned(vec![0u8; expect_total_size as usize])?;
+        let mut ip_packet =
+            MutableIpv4Packet::owned(vec![0u8; expect_total_size as usize]).unwrap();
         ip_packet.set_version(4);
         ip_packet.set_header_length((Self::IPV4_HEADER_LENGTH >> 2) as u8);
         ip_packet.set_destination(dst_ip);
@@ -90,7 +92,44 @@ impl Prober {
 
         ip_packet.set_payload(udp_packet.packet());
 
-        return Some(ip_packet.consume_to_immutable());
+        return ip_packet.consume_to_immutable();
+    }
+
+    pub fn parse(&self, packet: Box<dyn Packet>) -> Result<ProbeResult> {
+        let ip_packet = Ipv4Packet::new(packet.packet()).ok_or(Error::ParseError)?;
+        let icmp_packet = IcmpPacket::new(ip_packet.payload()).ok_or(Error::ParseError)?;
+        let res_ip_packet = Ipv4Packet::new(icmp_packet.payload()).ok_or(Error::ParseError)?;
+        let _res_udp_packet = UdpPacket::new(res_ip_packet.payload()).ok_or(Error::ParseError)?;
+
+        let initial_ttl = res_ip_packet.get_identification() & 0x1f;
+        let dst_ttl = res_ip_packet.get_ttl() as u16;
+
+        let icmp_type = icmp_packet.get_icmp_type();
+        let icmp_code = icmp_packet.get_icmp_code();
+
+        let (distance, from_destination) = {
+            if icmp_type == IcmpTypes::DestinationUnreachable && [1, 2, 3].contains(&icmp_code.0) {
+                (initial_ttl - dst_ttl + 1, true)
+            } else if icmp_type == IcmpTypes::TimeExceeded {
+                (initial_ttl, false)
+            } else {
+                return Err(Error::UnexpectedIcmpPacket(icmp_type, icmp_code));
+            }
+        };
+
+        let result = ProbeResult {
+            destination: res_ip_packet.get_destination(),
+            responder: ip_packet.get_source(),
+            distance: distance as u8,
+            from_destination,
+            debug: ProbeDebugResult {},
+        };
+
+        Ok(result)
+    }
+
+    pub fn run_callback(&self, probe_result: ProbeResult) {
+        (self.callback)(probe_result);
     }
 }
 
@@ -101,9 +140,7 @@ mod test {
     #[test]
     fn test_pack() {
         let prober = Prober::new(|_| {}, ProbePhase::Pre, 33434, "hello".to_owned(), true);
-        let packet = prober
-            .pack(("1.2.3.4".parse().unwrap(), 32), "4.3.2.1".parse().unwrap())
-            .unwrap();
+        let packet = prober.pack(("1.2.3.4".parse().unwrap(), 32), "4.3.2.1".parse().unwrap());
         println!("{:#?}", packet);
     }
 }
