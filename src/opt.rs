@@ -38,4 +38,6 @@ pub struct Opt {
     // Target
     #[structopt(default_value = "115.159.1.0/24")]
     pub target: ipnet::Ipv4Net,
+    #[structopt(default_value = "8")]
+    pub grain: u8,
 }
