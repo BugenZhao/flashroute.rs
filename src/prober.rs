@@ -27,6 +27,7 @@ pub struct Prober {
     dst_port: u16,
     payload_msg: String,
     encode_timestamp: bool,
+    checksum_salt: u16,
 }
 
 impl Prober {
@@ -39,6 +40,7 @@ impl Prober {
         dst_port: u16,
         payload_msg: String,
         encode_timestamp: bool,
+        checksum_salt: u16,
     ) -> Self {
         Self {
             callback,
@@ -46,6 +48,7 @@ impl Prober {
             dst_port,
             payload_msg,
             encode_timestamp,
+            checksum_salt,
         }
     }
 }
@@ -55,7 +58,7 @@ pub type ProbeUnit = (Ipv4Addr, u8);
 impl Prober {
     pub fn pack(&self, destination: ProbeUnit, source_ip: Ipv4Addr) -> Ipv4Packet {
         let (dst_ip, ttl) = destination;
-        let timestamp = crate::utils::get_timestamp_ms_u16();
+        let timestamp = crate::utils::timestamp_ms_u16();
         let expect_total_size = {
             let mut size = 128;
             if self.encode_timestamp {
@@ -66,7 +69,7 @@ impl Prober {
         let expect_udp_size = expect_total_size - Self::IPV4_HEADER_LENGTH;
 
         let mut udp_packet = MutableUdpPacket::owned(vec![0u8; expect_udp_size as usize]).unwrap();
-        udp_packet.set_source(8888); // TODO: what's the port?
+        udp_packet.set_source(crate::utils::ip_checksum(dst_ip, self.checksum_salt)); // TODO: is this ok?
         udp_packet.set_destination(self.dst_port);
         udp_packet.set_length(expect_udp_size);
         udp_packet.set_payload(self.payload_msg.as_bytes());
@@ -101,17 +104,24 @@ impl Prober {
         let ip_packet = Ipv4Packet::new(packet.packet()).ok_or(Error::ParseError)?;
         let icmp_packet = IcmpPacket::new(ip_packet.payload()).ok_or(Error::ParseError)?;
         let res_ip_packet = Ipv4Packet::new(icmp_packet.payload()).ok_or(Error::ParseError)?;
-        let _res_udp_packet = UdpPacket::new(res_ip_packet.payload()).ok_or(Error::ParseError)?;
+        let res_udp_packet = UdpPacket::new(res_ip_packet.payload()).ok_or(Error::ParseError)?;
+
+        let destination = res_ip_packet.get_destination();
+        let src_port = res_udp_packet.get_source();
+        let expected_src_port = crate::utils::ip_checksum(destination, self.checksum_salt);
+        if src_port != expected_src_port {
+            return Err(Error::UnexpectedIcmpSrcPort(src_port, expected_src_port));
+        }
 
         let initial_ttl = {
             let ttl = res_ip_packet.get_identification() & 0x1f;
             if ttl == 0 {
                 32
             } else {
-                ttl
+                ttl as u8
             }
         };
-        let dst_ttl = res_ip_packet.get_ttl() as u16;
+        let dst_ttl = res_ip_packet.get_ttl();
 
         let icmp_type = icmp_packet.get_icmp_type();
         let icmp_code = icmp_packet.get_icmp_code();
@@ -122,16 +132,16 @@ impl Prober {
             } else if icmp_type == IcmpTypes::TimeExceeded {
                 (initial_ttl, false)
             } else {
-                return Err(Error::UnexpectedIcmpPacket(icmp_type, icmp_code));
+                return Err(Error::UnexpectedIcmpType(icmp_type, icmp_code));
             }
         };
 
         // TODO: extract more data for debug use
 
         let result = ProbeResult {
-            destination: res_ip_packet.get_destination(),
+            destination,
             responder: ip_packet.get_source(),
-            distance: distance as u8,
+            distance,
             from_destination,
             debug: ProbeDebugResult {},
         };
@@ -156,7 +166,7 @@ mod test {
 
     #[test]
     fn test_pack() {
-        let prober = Prober::new(|_| {}, ProbePhase::Pre, 33434, "hello".to_owned(), true);
+        let prober = Prober::new(|_| {}, ProbePhase::Pre, 33434, "hello".to_owned(), true, 0);
         let packet = prober.pack((*IP1, 32), *IP2);
         println!("{:#?}", packet);
     }
