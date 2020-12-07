@@ -1,5 +1,5 @@
 use std::{
-    net::{IpAddr, Ipv4Addr},
+    net::IpAddr,
     sync::atomic::Ordering,
     sync::{
         atomic::{AtomicBool, AtomicU64},
@@ -10,7 +10,6 @@ use std::{
 };
 
 use crate::{
-    error::*,
     prober::{ProbeUnit, Prober},
     LOCAL_IPV4_ADDR, OPT,
 };
@@ -130,7 +129,7 @@ impl NetworkManager {
 
             loop {
                 if let Ok(Some((ip_packet, _addr))) = iter.next_with_timeout(timeout) {
-                    match prober.parse(ip_packet.packet()) {
+                    match prober.parse(ip_packet.packet(), false) {
                         Ok(result) => {
                             prober.run_callback(result);
                             recv_packets.fetch_add(1, Ordering::SeqCst);
