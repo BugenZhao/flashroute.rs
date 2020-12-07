@@ -70,7 +70,13 @@ impl Tracerouter {
             .subnets(OPT.target.max_prefix_len() - OPT.grain)
             .unwrap();
 
-        subnets.map(move |net| net.addr().saturating_add(rng.gen_range(1, 1 << OPT.grain)))
+        subnets.map(move |net| {
+            if OPT.grain == 0 {
+                net.addr()
+            } else {
+                net.addr().saturating_add(rng.gen_range(1, 1 << OPT.grain))
+            }
+        })
     }
 
     fn stopped(&self) -> bool {
