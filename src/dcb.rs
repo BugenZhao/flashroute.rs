@@ -40,7 +40,7 @@ impl DstCtrlBlock {
 }
 
 impl DstCtrlBlock {
-    pub fn pull_backward_task(&mut self) -> Option<u8> {
+    pub fn pull_backward_task(&self) -> Option<u8> {
         let result = self.next_backward_hop.fetch_update(SeqCst, SeqCst, |x| {
             if x > 0 {
                 Some(x - 1)
@@ -51,7 +51,7 @@ impl DstCtrlBlock {
         result.ok()
     }
 
-    pub fn pull_forward_task(&mut self) -> Option<u8> {
+    pub fn pull_forward_task(&self) -> Option<u8> {
         let result = self.next_forward_hop.fetch_update(SeqCst, SeqCst, |x| {
             // TODO: more elegant way?
             if x <= self.forward_horizon.load(SeqCst) {
@@ -63,7 +63,7 @@ impl DstCtrlBlock {
         result.ok()
     }
 
-    pub fn last_forward_task(&mut self) -> u8 {
+    pub fn last_forward_task(&self) -> u8 {
         let next = self.next_forward_hop.load(Acquire);
         if next == 0 {
             0
@@ -72,18 +72,18 @@ impl DstCtrlBlock {
         }
     }
 
-    pub fn set_forward_horizon(&mut self, new_horizon: u8) {
+    pub fn set_forward_horizon(&self, new_horizon: u8) {
         if new_horizon == 0 {
             return;
         }
         self.forward_horizon.fetch_max(new_horizon, SeqCst);
     }
 
-    pub fn stop_backward(&mut self) -> u8 {
+    pub fn stop_backward(&self) -> u8 {
         self.next_backward_hop.fetch_min(0, SeqCst)
     }
 
-    pub fn stop_forward(&mut self) {
+    pub fn stop_forward(&self) {
         self.forward_horizon.fetch_min(0, SeqCst);
     }
 }
@@ -98,7 +98,7 @@ mod test {
 
     #[test]
     fn test_backward_task() {
-        let mut dcb = DstCtrlBlock::new(*IP, 3);
+        let dcb = DstCtrlBlock::new(*IP, 3);
         assert_eq!(dcb.pull_backward_task(), Some(3));
         assert_eq!(dcb.pull_backward_task(), Some(2));
         assert_eq!(dcb.pull_backward_task(), Some(1));
@@ -107,7 +107,7 @@ mod test {
 
     #[test]
     fn test_forward_task() {
-        let mut dcb = DstCtrlBlock::new(*IP, 3);
+        let dcb = DstCtrlBlock::new(*IP, 3);
         assert_eq!(dcb.pull_forward_task(), None);
         dcb.set_forward_horizon(5);
         assert_eq!(dcb.pull_forward_task(), Some(4));
@@ -117,7 +117,7 @@ mod test {
 
     #[test]
     fn test_stop_backward_task() {
-        let mut dcb = DstCtrlBlock::new(*IP, 3);
+        let dcb = DstCtrlBlock::new(*IP, 3);
         assert_eq!(dcb.pull_backward_task(), Some(3));
         dcb.stop_backward();
         assert_eq!(dcb.pull_backward_task(), None);
@@ -125,7 +125,7 @@ mod test {
 
     #[test]
     fn test_stop_forward_task() {
-        let mut dcb = DstCtrlBlock::new(*IP, 3);
+        let dcb = DstCtrlBlock::new(*IP, 3);
         dcb.set_forward_horizon(5);
         assert_eq!(dcb.pull_forward_task(), Some(4));
         dcb.stop_forward();
