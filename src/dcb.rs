@@ -1,6 +1,6 @@
 use std::{
     net::Ipv4Addr,
-    sync::atomic::{AtomicU8, Ordering},
+    sync::atomic::{AtomicBool, AtomicU8, Ordering},
 };
 
 use Ordering::{Acquire, SeqCst};
@@ -8,8 +8,8 @@ use Ordering::{Acquire, SeqCst};
 #[derive(Debug)]
 pub struct DstCtrlBlock {
     pub addr: Ipv4Addr,
-    pub initial_ttl: u8,
-    pub accurate_distance: bool,
+    pub initial_ttl: AtomicU8,
+    pub accurate_distance: AtomicBool,
     pub next_backward_hop: AtomicU8,
     pub next_forward_hop: AtomicU8,
     pub forward_horizon: AtomicU8,
@@ -19,23 +19,23 @@ impl DstCtrlBlock {
     pub fn new(addr: Ipv4Addr, initial_ttl: u8) -> Self {
         DstCtrlBlock {
             addr,
-            initial_ttl,
-            accurate_distance: false,
+            initial_ttl: AtomicU8::new(initial_ttl),
+            accurate_distance: AtomicBool::new(false),
             next_backward_hop: AtomicU8::new(initial_ttl),
             next_forward_hop: AtomicU8::new(initial_ttl + 1),
             forward_horizon: AtomicU8::new(initial_ttl),
         }
     }
 
-    pub fn update_split_ttl(&mut self, new_ttl: u8, accurate: bool) {
-        if self.accurate_distance {
+    pub fn update_split_ttl(&self, new_ttl: u8, accurate: bool) {
+        if self.accurate_distance.load(SeqCst) {
             return;
         }
-        self.initial_ttl = new_ttl;
+        self.initial_ttl.store(new_ttl, SeqCst);
         self.next_backward_hop.store(new_ttl, SeqCst);
         self.next_forward_hop.store(new_ttl + 1, SeqCst);
         self.forward_horizon.store(new_ttl, SeqCst);
-        self.accurate_distance = accurate;
+        self.accurate_distance.store(accurate, SeqCst);
     }
 }
 
