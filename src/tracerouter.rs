@@ -82,19 +82,21 @@ impl Tracerouter {
     fn start_preprobing_task(&mut self) {
         let prober = Prober::new(ProbePhase::Pre, true, 0);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
-        let nm = NetworkManager::new(prober, recv_tx);
-        let (stop_tx, stop_rx) = oneshot::channel::<()>();
+        let mut nm = NetworkManager::new(prober, recv_tx);
+        let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
 
         let targets = self.targets.clone();
         tokio::spawn(async move {
-            tokio::select! {
-                Some(result) = recv_rx.recv() => {
-                    Self::preprobing_callback(&targets, result);
-                }
-                _ = stop_rx => {
-                    return;
-                }
-            };
+            loop {
+                tokio::select! {
+                    Some(result) = recv_rx.recv() => {
+                        Self::preprobing_callback(&targets, result);
+                    }
+                    _ = &mut stop_rx => {
+                        return;
+                    }
+                };
+            }
         });
 
         // WORKER BEGIN
@@ -144,22 +146,24 @@ impl Tracerouter {
     fn start_probing_task(&mut self) {
         let prober = Prober::new(ProbePhase::Main, true, 0);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
-        let nm = NetworkManager::new(prober, recv_tx);
-        let (stop_tx, stop_rx) = oneshot::channel::<()>();
+        let mut nm = NetworkManager::new(prober, recv_tx);
+        let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
 
         let targets = self.targets.clone();
         let mut backward_stop_set = HashSet::<Ipv4Addr>::new();
         let mut forward_discovery_set = HashSet::<Ipv4Addr>::new();
 
         tokio::spawn(async move {
-            tokio::select! {
-                Some(result) = recv_rx.recv() => {
-                    Self::probing_callback(&targets, &mut backward_stop_set, &mut forward_discovery_set, result);
-                }
-                _ = stop_rx => {
-                    return;
-                }
-            };
+            loop {
+                tokio::select! {
+                    Some(result) = recv_rx.recv() => {
+                        Self::probing_callback(&targets, &mut backward_stop_set, &mut forward_discovery_set, result);
+                    }
+                    _ = &mut stop_rx => {
+                        return;
+                    }
+                };
+            }
         });
 
         // WORKER BEGIN
