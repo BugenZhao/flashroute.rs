@@ -101,8 +101,8 @@ impl Prober {
         return ip_packet.consume_to_immutable();
     }
 
-    pub fn parse(&self, packet: Box<dyn Packet>, ignore_port: bool) -> Result<ProbeResult> {
-        let ip_packet = Ipv4Packet::new(packet.packet()).ok_or(Error::ParseError)?;
+    pub fn parse(&self, packet: &[u8], ignore_port: bool) -> Result<ProbeResult> {
+        let ip_packet = Ipv4Packet::new(packet).ok_or(Error::ParseError)?;
         let icmp_packet = IcmpPacket::new(ip_packet.payload()).ok_or(Error::ParseError)?;
         let res_ip_packet =
             Ipv4Packet::new(&ip_packet.payload()[Self::ICMP_HEADER_LENGTH as usize..])
@@ -196,9 +196,7 @@ mod test {
     fn test_parse() {
         let prober = Prober::new(|_| {}, ProbePhase::Main, 33434, "".to_owned(), true, 0);
         {
-            let result = prober
-                .parse(Box::new(TLE_WITH_DATA.to_immutable()), true)
-                .unwrap();
+            let result = prober.parse(TLE_WITH_DATA.packet(), true).unwrap();
             println!("{:#?}", result);
             assert_eq!(result.destination.to_string(), "59.78.31.75");
             assert_eq!(result.responder.to_string(), "59.78.37.254");
@@ -206,9 +204,7 @@ mod test {
             assert_eq!(result.from_destination, false);
         }
         {
-            let result = prober
-                .parse(Box::new(TLE_WITHOUT_DATA.to_immutable()), true)
-                .unwrap();
+            let result = prober.parse(TLE_WITHOUT_DATA.packet(), true).unwrap();
             println!("{:#?}", result);
             assert_eq!(result.destination.to_string(), "59.78.173.84");
             assert_eq!(result.responder.to_string(), "101.4.135.214");
@@ -216,9 +212,7 @@ mod test {
             assert_eq!(result.from_destination, false);
         }
         {
-            let result = prober
-                .parse(Box::new(UNR_WITH_DATA.to_immutable()), true)
-                .unwrap();
+            let result = prober.parse(UNR_WITH_DATA.packet(), true).unwrap();
             println!("{:#?}", result);
             assert_eq!(result.destination.to_string(), "59.78.17.126");
             assert_eq!(result.responder.to_string(), "59.78.17.126");
