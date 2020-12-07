@@ -108,3 +108,21 @@ impl Tracerouter {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_generation() {
+        let tr = Tracerouter::new().unwrap();
+        assert_eq!(
+            tr.targets.len(),
+            1 << (32 - OPT.target.prefix_len() - OPT.grain)
+        );
+        assert!(tr
+            .targets
+            .values()
+            .all(|dcb| OPT.target.contains(&dcb.addr)));
+    }
+}
