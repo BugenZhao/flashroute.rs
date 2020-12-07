@@ -3,13 +3,15 @@ use std::{
     sync::atomic::{AtomicU8, Ordering},
 };
 
+use Ordering::{Acquire, SeqCst};
+
 pub struct DstCtrlBlock {
-    addr: Ipv4Addr,
-    initial_ttl: u8,
-    accurate_distance: bool,
-    next_backward_hop: AtomicU8,
-    next_forward_hop: AtomicU8,
-    forward_horizon: AtomicU8,
+    pub addr: Ipv4Addr,
+    pub initial_ttl: u8,
+    pub accurate_distance: bool,
+    pub next_backward_hop: AtomicU8,
+    pub next_forward_hop: AtomicU8,
+    pub forward_horizon: AtomicU8,
 }
 
 impl DstCtrlBlock {
@@ -29,55 +31,59 @@ impl DstCtrlBlock {
             return;
         }
         self.initial_ttl = new_ttl;
-        self.next_backward_hop.store(new_ttl, Ordering::SeqCst);
-        self.next_forward_hop.store(new_ttl + 1, Ordering::SeqCst);
-        self.forward_horizon.store(new_ttl, Ordering::SeqCst);
+        self.next_backward_hop.store(new_ttl, SeqCst);
+        self.next_forward_hop.store(new_ttl + 1, SeqCst);
+        self.forward_horizon.store(new_ttl, SeqCst);
         self.accurate_distance = accurate;
     }
 }
 
 impl DstCtrlBlock {
     pub fn pull_backward_task(&mut self) -> Option<u8> {
-        let result = self
-            .next_backward_hop
-            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |x| {
-                if x > 0 {
-                    Some(x - 1)
-                } else {
-                    None
-                }
-            });
+        let result = self.next_backward_hop.fetch_update(SeqCst, SeqCst, |x| {
+            if x > 0 {
+                Some(x - 1)
+            } else {
+                None
+            }
+        });
         result.ok()
     }
 
     pub fn pull_forward_task(&mut self) -> Option<u8> {
-        let result = self
-            .next_forward_hop
-            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |x| {
-                // TODO: more elegant way?
-                if x <= self.forward_horizon.load(Ordering::SeqCst) {
-                    Some(x + 1)
-                } else {
-                    None
-                }
-            });
+        let result = self.next_forward_hop.fetch_update(SeqCst, SeqCst, |x| {
+            // TODO: more elegant way?
+            if x <= self.forward_horizon.load(SeqCst) {
+                Some(x + 1)
+            } else {
+                None
+            }
+        });
         result.ok()
+    }
+
+    pub fn last_forward_task(&mut self) -> u8 {
+        let next = self.next_forward_hop.load(Acquire);
+        if next == 0 {
+            0
+        } else {
+            next - 1
+        }
     }
 
     pub fn set_forward_horizon(&mut self, new_horizon: u8) {
         if new_horizon == 0 {
             return;
         }
-        self.forward_horizon
-            .fetch_max(new_horizon, Ordering::SeqCst);
+        self.forward_horizon.fetch_max(new_horizon, SeqCst);
     }
 
     pub fn stop_backward(&mut self) -> u8 {
-        self.next_backward_hop.fetch_min(0, Ordering::SeqCst)
+        self.next_backward_hop.fetch_min(0, SeqCst)
     }
 
     pub fn stop_forward(&mut self) {
-        self.forward_horizon.fetch_min(0, Ordering::SeqCst);
+        self.forward_horizon.fetch_min(0, SeqCst);
     }
 }
 
