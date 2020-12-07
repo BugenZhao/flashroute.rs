@@ -17,3 +17,4 @@ ipnet = "2.3"
 log = "0.4"
 env_logger = "0.8"
 lazy_static = "1.4"
+tokio = { version = "0.3", features = ["full"] }

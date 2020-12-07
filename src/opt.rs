@@ -15,7 +15,7 @@ pub struct Opt {
     #[structopt(long, default_value = "16")]
     pub split_ttl: u16,
     #[structopt(long, default_value = "400000")]
-    pub probing_rate: u32,
+    pub probing_rate: u64,
 
     // Connection
     #[structopt(long, parse(try_from_str = utils::get_interface), default_value = "")]
