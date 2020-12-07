@@ -81,7 +81,7 @@ impl NetworkManager {
         let protocol = Layer3(Udp);
         let (mut sender, _) = transport_channel(0, protocol)?;
         let local_ip = OPT.local_addr;
-        let dummy_addr = IpAddr::V4("0.0.0.0".parse().unwrap());
+        let _dummy_addr = IpAddr::V4("0.0.0.0".parse().unwrap());
 
         tokio::spawn(async move {
             log::info!("sending task started [{:?}]", prober.phase);
@@ -110,7 +110,9 @@ impl NetworkManager {
                         }
 
                         let packet = prober.pack(dst_unit, local_ip);
-                        let _ = sender.send_to(packet, dummy_addr);
+                        let _ = sender.send_to(packet, IpAddr::V4(dst_unit.0));
+
+                        log::debug!("PROBE: {:?}", dst_unit);
 
                         sent_packets.fetch_add(1, SeqCst);
                         sent_this_sec += 1;
@@ -147,6 +149,7 @@ impl NetworkManager {
                 if let Ok(Some((ip_packet, _addr))) = iter.next_with_timeout(timeout) {
                     match prober.parse(ip_packet.packet(), false) {
                         Ok(result) => {
+                            log::debug!("RECV: {:?}", result);
                             let _ = recv_tx.send(result);
                             recv_packets.fetch_add(1, SeqCst);
                         }

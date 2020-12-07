@@ -30,7 +30,7 @@ lazy_static! {
 #[tokio::main]
 async fn main() {
     env_logger::builder()
-        .filter_level(log::LevelFilter::Info)
+        .filter_level(log::LevelFilter::Debug)
         .init();
 
     log::info!("{:#?}", *OPT);
