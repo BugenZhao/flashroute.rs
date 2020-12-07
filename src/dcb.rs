@@ -3,7 +3,7 @@ use std::{
     sync::atomic::{AtomicBool, AtomicU8, Ordering},
 };
 
-use Ordering::{Acquire, SeqCst};
+use Ordering::SeqCst;
 
 #[derive(Debug)]
 pub struct DstCtrlBlock {
@@ -64,7 +64,7 @@ impl DstCtrlBlock {
     }
 
     pub fn last_forward_task(&self) -> u8 {
-        let next = self.next_forward_hop.load(Acquire);
+        let next = self.next_forward_hop.load(SeqCst);
         if next == 0 {
             0
         } else {
