@@ -7,11 +7,11 @@ pub struct ProbeDebugResult {}
 
 #[derive(Debug)]
 pub struct ProbeResult {
-    destination: Ipv4Addr,
-    responder: Ipv4Addr,
-    distance: u8,
-    from_destination: bool,
-    debug: ProbeDebugResult,
+    pub destination: Ipv4Addr,
+    pub responder: Ipv4Addr,
+    pub distance: u8,
+    pub from_destination: bool,
+    pub debug: ProbeDebugResult,
 }
 
 #[derive(Copy, Clone)]

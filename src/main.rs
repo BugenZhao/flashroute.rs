@@ -8,6 +8,7 @@ mod error;
 mod network;
 mod opt;
 mod prober;
+mod tracerouter;
 mod utils;
 
 use opt::Opt;
