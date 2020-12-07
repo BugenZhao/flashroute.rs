@@ -1,6 +1,10 @@
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::{
+    net::Ipv4Addr,
+    sync::atomic::{AtomicU8, Ordering},
+};
 
-struct DstCtrlBlock {
+pub struct DstCtrlBlock {
+    addr: Ipv4Addr,
     initial_ttl: u8,
     accurate_distance: bool,
     next_backward_hop: AtomicU8,
@@ -9,8 +13,9 @@ struct DstCtrlBlock {
 }
 
 impl DstCtrlBlock {
-    pub fn new(initial_ttl: u8) -> Self {
+    pub fn new(addr: Ipv4Addr, initial_ttl: u8) -> Self {
         DstCtrlBlock {
+            addr,
             initial_ttl,
             accurate_distance: false,
             next_backward_hop: AtomicU8::new(initial_ttl),
@@ -49,7 +54,7 @@ impl DstCtrlBlock {
         let result = self
             .next_forward_hop
             .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |x| {
-                // TODO: more elegant way? 
+                // TODO: more elegant way?
                 if x <= self.forward_horizon.load(Ordering::SeqCst) {
                     Some(x + 1)
                 } else {
@@ -78,11 +83,15 @@ impl DstCtrlBlock {
 
 #[cfg(test)]
 mod test {
-    use super::DstCtrlBlock;
+    use super::*;
+
+    lazy_static! {
+        static ref IP: Ipv4Addr = "0.0.0.0".parse().unwrap();
+    }
 
     #[test]
     fn test_backward_task() {
-        let mut dcb = DstCtrlBlock::new(3);
+        let mut dcb = DstCtrlBlock::new(*IP, 3);
         assert_eq!(dcb.pull_backward_task(), Some(3));
         assert_eq!(dcb.pull_backward_task(), Some(2));
         assert_eq!(dcb.pull_backward_task(), Some(1));
@@ -91,7 +100,7 @@ mod test {
 
     #[test]
     fn test_forward_task() {
-        let mut dcb = DstCtrlBlock::new(3);
+        let mut dcb = DstCtrlBlock::new(*IP, 3);
         assert_eq!(dcb.pull_forward_task(), None);
         dcb.set_forward_horizon(5);
         assert_eq!(dcb.pull_forward_task(), Some(4));
@@ -101,7 +110,7 @@ mod test {
 
     #[test]
     fn test_stop_backward_task() {
-        let mut dcb = DstCtrlBlock::new(3);
+        let mut dcb = DstCtrlBlock::new(*IP, 3);
         assert_eq!(dcb.pull_backward_task(), Some(3));
         dcb.stop_backward();
         assert_eq!(dcb.pull_backward_task(), None);
@@ -109,7 +118,7 @@ mod test {
 
     #[test]
     fn test_stop_forward_task() {
-        let mut dcb = DstCtrlBlock::new(3);
+        let mut dcb = DstCtrlBlock::new(*IP, 3);
         dcb.set_forward_horizon(5);
         assert_eq!(dcb.pull_forward_task(), Some(4));
         dcb.stop_forward();
