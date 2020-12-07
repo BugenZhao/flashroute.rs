@@ -2,7 +2,7 @@ use std::{
     collections::{HashMap, HashSet},
     net::Ipv4Addr,
     sync::{
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
     },
     time::{Duration, SystemTime},
@@ -31,9 +31,9 @@ pub struct Tracerouter {
 
     // stats
     // preprobe_update_count: Arc<AtomicU64>,
-    sent_preprobes: u64,
-    sent_probes: u64,
-    recv_responses: u64,
+    sent_preprobes: AtomicU64,
+    sent_probes: AtomicU64,
+    recv_responses: AtomicU64,
 }
 
 impl Tracerouter {
@@ -78,6 +78,18 @@ impl Tracerouter {
             }
         })
     }
+}
+
+impl Tracerouter {
+    pub fn start(&self) -> Result<()> {
+        self.start_preprobing_task()?;
+        self.start_probing_task()?;
+        Ok(())
+    }
+
+    pub fn stop(&self) {
+        self.stopped.store(true, SeqCst);
+    }
 
     fn stopped(&self) -> bool {
         self.stopped.load(SeqCst)
@@ -85,10 +97,10 @@ impl Tracerouter {
 }
 
 impl Tracerouter {
-    fn start_preprobing_task(&mut self) {
+    fn start_preprobing_task(&self) -> Result<()> {
         let prober = Prober::new(ProbePhase::Pre, true, 0);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
-        let mut nm = NetworkManager::new(prober, recv_tx);
+        let mut nm = NetworkManager::new(prober, recv_tx)?;
         let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
 
         let targets = self.targets.clone();
@@ -120,8 +132,10 @@ impl Tracerouter {
         nm.stop();
         let _ = stop_tx.send(());
 
-        self.sent_preprobes += nm.sent_packets();
-        self.recv_responses += nm.recv_packets();
+        self.sent_preprobes.fetch_add(nm.sent_packets(), SeqCst);
+        self.recv_responses.fetch_add(nm.recv_packets(), SeqCst);
+
+        Ok(())
     }
 
     fn preprobing_callback(targets: &DcbMap, result: ProbeResult) {
@@ -149,10 +163,10 @@ impl Tracerouter {
 }
 
 impl Tracerouter {
-    fn start_probing_task(&mut self) {
+    fn start_probing_task(&self) -> Result<()> {
         let prober = Prober::new(ProbePhase::Main, true, 0);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
-        let mut nm = NetworkManager::new(prober, recv_tx);
+        let mut nm = NetworkManager::new(prober, recv_tx)?;
         let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
 
         let targets = self.targets.clone();
@@ -215,8 +229,10 @@ impl Tracerouter {
         nm.stop();
         let _ = stop_tx.send(());
 
-        self.sent_probes += nm.sent_packets();
-        self.recv_responses += nm.recv_packets();
+        self.sent_probes.fetch_add(nm.sent_packets(), SeqCst);
+        self.recv_responses.fetch_add(nm.recv_packets(), SeqCst);
+
+        Ok(())
     }
 
     fn probing_callback(
