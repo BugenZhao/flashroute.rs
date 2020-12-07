@@ -1,12 +1,16 @@
 use std::{
     net::IpAddr,
     sync::atomic::Ordering,
-    sync::{atomic::AtomicU64, Arc},
+    sync::{
+        atomic::{AtomicBool, AtomicU64},
+        Arc,
+    },
     time::Duration,
     time::SystemTime,
 };
 
 use crate::{
+    error::*,
     prober::{ProbeResult, ProbeUnit, Prober},
     OPT,
 };
@@ -31,11 +35,12 @@ pub struct NetworkManager {
     sent_packets: Arc<AtomicU64>,
     recv_packets: Arc<AtomicU64>,
     send_tx: MpscTx<ProbeUnit>,
+    stopped: Arc<AtomicBool>,
     stop_txs: Vec<OneshotTx<()>>,
 }
 
 impl NetworkManager {
-    pub fn new(prober: Prober, recv_tx: MpscTx<ProbeResult>) -> Self {
+    pub fn new(prober: Prober, recv_tx: MpscTx<ProbeResult>) -> Result<Self> {
         let (send_tx, send_rx) = mpsc::unbounded_channel();
 
         let prober = Arc::new(prober);
@@ -43,24 +48,26 @@ impl NetworkManager {
         let recv_packets = Arc::new(AtomicU64::new(0));
         let mut stop_txs = Vec::new();
 
-        {
-            let (stop_tx, stop_rx) = oneshot::channel::<()>();
-            stop_txs.push(stop_tx);
-            Self::start_sending_task(prober.clone(), send_rx, stop_rx, sent_packets.clone());
-        }
-        {
-            let (stop_tx, stop_rx) = oneshot::channel::<()>();
-            stop_txs.push(stop_tx);
-            Self::start_recving_task(prober.clone(), stop_rx, recv_packets.clone(), recv_tx);
-        }
+        let (stop_tx, stop_rx) = oneshot::channel::<()>();
+        stop_txs.push(stop_tx);
+        Self::start_sending_task(prober.clone(), send_rx, stop_rx, sent_packets.clone())?;
 
-        Self {
+        let stopped = Arc::new(AtomicBool::new(false));
+        Self::start_recving_task(
+            prober.clone(),
+            stopped.clone(),
+            recv_packets.clone(),
+            recv_tx,
+        )?;
+
+        Ok(Self {
             prober,
             sent_packets,
             recv_packets,
             send_tx,
+            stopped,
             stop_txs,
-        }
+        })
     }
 
     const RECV_BUF_SIZE: usize = 400 * 1024;
@@ -70,14 +77,14 @@ impl NetworkManager {
         mut rx: MpscRx<ProbeUnit>,
         mut stop_rx: OneshotRx<()>,
         sent_packets: Arc<AtomicU64>,
-    ) {
-        tokio::spawn(async move {
-            log::info!("sending task started");
+    ) -> Result<()> {
+        let protocol = Layer3(Udp);
+        let (mut sender, _) = transport_channel(0, protocol)?;
+        let local_ip = OPT.local_addr;
+        let dummy_addr = IpAddr::V4("0.0.0.0".parse().unwrap());
 
-            let protocol = Layer3(Udp);
-            let (mut sender, _) = transport_channel(0, protocol).unwrap();
-            let local_ip = OPT.local_addr;
-            let dummy_addr = IpAddr::V4("0.0.0.0".parse().unwrap());
+        tokio::spawn(async move {
+            log::info!("sending task started [{:?}]", prober.phase);
 
             let mut sent_this_sec = 0u64;
             let mut last_seen = SystemTime::now();
@@ -87,6 +94,9 @@ impl NetworkManager {
 
             loop {
                 tokio::select! {
+                    _ = &mut stop_rx => {
+                        break;
+                    }
                     Ok(Some(dst_unit)) = tokio::time::timeout(timeout, rx.recv()) => {
                         // Probing rate control
                         let now = SystemTime::now();
@@ -105,50 +115,52 @@ impl NetworkManager {
                         sent_packets.fetch_add(1, SeqCst);
                         sent_this_sec += 1;
                     }
-                    _ = &mut stop_rx => {
-                        break;
-                    }
                 }
             }
 
-            log::info!("sending task stopped");
+            log::info!("sending task stopped [{:?}]", prober.phase);
         });
+
+        Ok(())
     }
 
     fn start_recving_task(
         prober: Arc<Prober>,
-        mut stop_rx: OneshotRx<()>,
+        stopped: Arc<AtomicBool>,
         recv_packets: Arc<AtomicU64>,
         recv_tx: MpscTx<ProbeResult>,
-    ) {
-        tokio::spawn(async move {
-            log::info!("receiving task started");
+    ) -> Result<()> {
+        let protocol = Layer3(Icmp);
+        let (_, mut receiver) = transport_channel(Self::RECV_BUF_SIZE, protocol)?;
 
-            let protocol = Layer3(Icmp);
-            let (_, mut receiver) = transport_channel(Self::RECV_BUF_SIZE, protocol).unwrap();
+        tokio::spawn(async move {
+            log::info!("receiving task started [{:?}]", prober.phase);
+
+            let timeout = Duration::from_millis(100);
             let mut iter = pnet::transport::ipv4_packet_iter(&mut receiver);
 
             loop {
-                tokio::select! {
-                    Ok((ip_packet, _addr)) = async { iter.next() }=> { // TODO: work?
-                        match prober.parse(ip_packet.packet(), false) {
-                            Ok(result) => {
-                                let _ = recv_tx.send(result);
-                                recv_packets.fetch_add(1, SeqCst);
-                            }
-                            Err(e) => {
-                                log::warn!("error occurred while parsing: {}", e);
-                            }
+                if stopped.load(Ordering::Acquire) {
+                    break;
+                }
+
+                if let Ok(Some((ip_packet, _addr))) = iter.next_with_timeout(timeout) {
+                    match prober.parse(ip_packet.packet(), false) {
+                        Ok(result) => {
+                            let _ = recv_tx.send(result);
+                            recv_packets.fetch_add(1, SeqCst);
                         }
-                    }
-                    _ = &mut stop_rx => {
-                        break;
+                        Err(e) => {
+                            log::warn!("error occurred while parsing: {}", e);
+                        }
                     }
                 }
             }
 
-            log::info!("receiving task stopped");
+            log::info!("receiving task stopped [{:?}]", prober.phase);
         });
+
+        Ok(())
     }
 
     pub fn schedule_probe(&self, unit: ProbeUnit) {
@@ -156,6 +168,7 @@ impl NetworkManager {
     }
 
     pub fn stop(&mut self) {
+        self.stopped.store(true, SeqCst);
         for tx in self.stop_txs.drain(..) {
             let _ = tx.send(());
         }

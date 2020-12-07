@@ -15,14 +15,15 @@ pub struct ProbeResult {
     pub debug: ProbeDebugResult,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum ProbePhase {
     Pre = 0,
     Main = 1,
 }
 
+#[derive(Debug)]
 pub struct Prober {
-    phase: ProbePhase,
+    pub phase: ProbePhase,
     encode_timestamp: bool,
     checksum_salt: u16,
 }
