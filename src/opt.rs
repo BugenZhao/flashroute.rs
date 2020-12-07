@@ -37,7 +37,7 @@ pub struct Opt {
 
     // Misc
     #[structopt(long, default_value = "114514")]
-    pub seed: i32,
+    pub seed: u64,
 
     // Target
     #[structopt(default_value = "115.159.0.0/16")]

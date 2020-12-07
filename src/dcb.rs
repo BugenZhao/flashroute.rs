@@ -5,6 +5,7 @@ use std::{
 
 use Ordering::{Acquire, SeqCst};
 
+#[derive(Debug)]
 pub struct DstCtrlBlock {
     pub addr: Ipv4Addr,
     pub initial_ttl: u8,

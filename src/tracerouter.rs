@@ -1,15 +1,17 @@
 use std::{
     collections::{HashMap, HashSet},
     net::Ipv4Addr,
-    sync::Arc,
 };
+
+use ipnet::IpAdd;
+use rand::{rngs::StdRng, Rng, SeedableRng};
 
 use crate::{dcb::DstCtrlBlock, error::*, prober::ProbeResult, OPT};
 
 type AddrKey = i64;
 type DcbMap = HashMap<AddrKey, DstCtrlBlock>;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Tracerouter {
     targets: DcbMap,
     backward_stop_set: HashSet<Ipv4Addr>,
@@ -20,11 +22,40 @@ pub struct Tracerouter {
 }
 
 impl Tracerouter {
-    fn new() -> Result<Self> {
+    pub fn new() -> Result<Self> {
         if OPT.grain > (OPT.target.max_prefix_len() - OPT.target.prefix_len()) {
             return Err(Error::BadGrainOrNet(OPT.grain, OPT.target));
         }
-        Ok(Self::default())
+
+        let mut targets = DcbMap::new();
+        targets.reserve(Self::targets_count());
+        for addr in Self::random_targets() {
+            targets.insert(Self::addr_to_key(addr), DstCtrlBlock::new(addr, 8));
+        }
+
+        Ok(Self {
+            targets,
+            ..Self::default()
+        })
+    }
+
+    fn addr_to_key(addr: Ipv4Addr) -> AddrKey {
+        let u: u32 = addr.into();
+        (u >> (OPT.grain)) as AddrKey
+    }
+
+    pub fn targets_count() -> usize {
+        1 << ((OPT.target.max_prefix_len() - OPT.target.prefix_len()) - OPT.grain)
+    }
+
+    pub fn random_targets() -> impl Iterator<Item = Ipv4Addr> {
+        let mut rng = StdRng::seed_from_u64(OPT.seed);
+        let subnets = OPT
+            .target
+            .subnets(OPT.target.max_prefix_len() - OPT.grain)
+            .unwrap();
+
+        subnets.map(move |net| net.addr().saturating_add(rng.gen_range(1, 1 << OPT.grain)))
     }
 
     fn preprobing_callback(&mut self, result: ProbeResult) {
@@ -75,10 +106,5 @@ impl Tracerouter {
                 dcb.stop_forward();
             }
         }
-    }
-
-    fn addr_to_key(addr: Ipv4Addr) -> AddrKey {
-        let u: u32 = addr.into();
-        (u >> (OPT.grain)) as AddrKey
     }
 }
