@@ -7,13 +7,17 @@ use crate::utils;
 pub struct Opt {
     // Preprobing
     #[structopt(long, default_value = "32")]
-    pub preprobing_ttl: u16,
+    pub preprobing_ttl: u8,
     #[structopt(long, default_value = "5")]
     pub proximity_span: u32,
 
     // Probing
     #[structopt(long, default_value = "16")]
-    pub split_ttl: u16,
+    pub split_ttl: u8,
+    #[structopt(long, default_value = "32")]
+    pub max_ttl: u8,
+    #[structopt(long, default_value = "5")]
+    pub gap: u8,
     #[structopt(long, default_value = "400000")]
     pub probing_rate: u64,
 
