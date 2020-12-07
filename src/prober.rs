@@ -103,7 +103,14 @@ impl Prober {
         let res_ip_packet = Ipv4Packet::new(icmp_packet.payload()).ok_or(Error::ParseError)?;
         let _res_udp_packet = UdpPacket::new(res_ip_packet.payload()).ok_or(Error::ParseError)?;
 
-        let initial_ttl = res_ip_packet.get_identification() & 0x1f;
+        let initial_ttl = {
+            let ttl = res_ip_packet.get_identification() & 0x1f;
+            if ttl == 0 {
+                32
+            } else {
+                ttl
+            }
+        };
         let dst_ttl = res_ip_packet.get_ttl() as u16;
 
         let icmp_type = icmp_packet.get_icmp_type();
