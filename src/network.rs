@@ -37,7 +37,7 @@ pub struct NetworkManager {
 }
 
 impl NetworkManager {
-    pub fn new(prober: Prober, recv_tx: MpscTx<ProbeResult>) -> Option<Self> {
+    pub fn new(prober: Prober, recv_tx: MpscTx<ProbeResult>) -> Self {
         let (send_tx, send_rx) = mpsc::unbounded_channel();
 
         let prober = Arc::new(prober);
@@ -58,13 +58,13 @@ impl NetworkManager {
             recv_tx,
         );
 
-        Some(Self {
+        Self {
             prober,
             sent_packets,
             recv_packets,
             send_tx,
             stopped,
-        })
+        }
     }
 
     const RECV_BUF_SIZE: usize = 400 * 1024;

@@ -1,13 +1,16 @@
 use std::{
     collections::{HashMap, HashSet},
     net::Ipv4Addr,
-    sync::atomic::AtomicU64,
-    sync::{atomic::Ordering, Arc, RwLock},
+    sync::{
+        atomic::{AtomicBool, AtomicU64, Ordering},
+        Arc,
+    },
+    time::Duration,
 };
 
 use ipnet::IpAdd;
 use rand::{rngs::StdRng, Rng, SeedableRng};
-use tokio::sync::mpsc;
+use tokio::sync::{mpsc, oneshot};
 use Ordering::SeqCst;
 
 use crate::{
@@ -21,12 +24,16 @@ type MpscRx<T> = mpsc::UnboundedReceiver<T>;
 type AddrKey = i64;
 type DcbMap = HashMap<AddrKey, DstCtrlBlock>;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Tracerouter {
-    targets: Arc<RwLock<DcbMap>>,
+    targets: Arc<DcbMap>,
+    stopped: Arc<AtomicBool>,
 
     // stats
-    preprobe_update_count: Arc<AtomicU64>,
+    // preprobe_update_count: Arc<AtomicU64>,
+    sent_preprobes: u64,
+    sent_probes: u64,
+    recv_responses: u64,
 }
 
 impl Tracerouter {
@@ -42,8 +49,8 @@ impl Tracerouter {
         }
 
         Ok(Self {
-            targets: Arc::new(RwLock::new(targets)),
-            preprobe_update_count: Arc::new(AtomicU64::new(0)),
+            targets: Arc::new(targets),
+            ..Self::default()
         })
     }
 
@@ -70,19 +77,45 @@ impl Tracerouter {
 impl Tracerouter {
     fn start_preprobing_task(&mut self) {
         let prober = Prober::new(ProbePhase::Pre, true, 0);
-        let (recv_tx, recv_rx) = mpsc::unbounded_channel();
-        let nm = NetworkManager::new(prober, recv_tx);
+        let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
+        let mut nm = NetworkManager::new(prober, recv_tx);
+        let (stop_tx, stop_rx) = oneshot::channel::<()>();
 
-        // TODO:
+        {
+            let targets = self.targets.clone();
+            tokio::spawn(async move {
+                tokio::select! {
+                    Some(result) = recv_rx.recv() => {
+                        Self::preprobing_callback(&targets, result);
+                    }
+                    _ = stop_rx => {
+                        return;
+                    }
+                };
+            });
+        }
+
+        for target in self.targets.values() {
+            if self.stopped.load(SeqCst) {
+                break;
+            }
+            nm.schedule_probe((target.addr, OPT.preprobing_ttl));
+        }
+
+        if !self.stopped.load(SeqCst) {
+            std::thread::sleep(Duration::from_secs(3));
+        }
+        nm.stop();
+        let _ = stop_tx.send(());
     }
 
-    fn preprobing_callback(targets: Arc<RwLock<DcbMap>>, result: ProbeResult) {
+    fn preprobing_callback(targets: &DcbMap, result: ProbeResult) {
         if !result.from_destination {
             return;
         }
 
         let key = Self::addr_to_key(result.destination);
-        if let Some(dcb) = targets.read().unwrap().get(&key) {
+        if let Some(dcb) = targets.get(&key) {
             dcb.update_split_ttl(result.distance, true);
 
             // proximity
@@ -92,7 +125,7 @@ impl Tracerouter {
                 if n_key == key {
                     continue;
                 }
-                if let Some(dcb) = targets.read().unwrap().get(&n_key) {
+                if let Some(dcb) = targets.get(&n_key) {
                     dcb.update_split_ttl(result.distance, false);
                 }
             }
@@ -100,13 +133,13 @@ impl Tracerouter {
     }
 
     fn probing_callback(
-        targets: Arc<RwLock<DcbMap>>,
+        targets: Arc<DcbMap>,
         backward_stop_set: &mut HashSet<Ipv4Addr>,
         forward_discovery_set: &mut HashSet<Ipv4Addr>,
         result: ProbeResult,
     ) {
         let key = Self::addr_to_key(result.destination);
-        if let Some(dcb) = targets.write().unwrap().get_mut(&key) {
+        if let Some(dcb) = targets.get(&key) {
             if !result.from_destination {
                 // hosts on the path
                 if result.distance > dcb.initial_ttl.load(SeqCst) {
@@ -139,13 +172,11 @@ mod test {
     fn test_generation() {
         let tr = Tracerouter::new().unwrap();
         assert_eq!(
-            tr.targets.read().unwrap().len(),
+            tr.targets.len(),
             1 << (32 - OPT.target.prefix_len() - OPT.grain)
         );
         assert!(tr
             .targets
-            .read()
-            .unwrap()
             .values()
             .all(|dcb| OPT.target.contains(&dcb.addr)));
     }
