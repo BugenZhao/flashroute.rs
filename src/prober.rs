@@ -21,10 +21,7 @@ pub enum ProbePhase {
     Main = 1,
 }
 
-pub type ProbeCallback = fn(result: ProbeResult) -> ();
-
 pub struct Prober {
-    callback: ProbeCallback,
     phase: ProbePhase,
     encode_timestamp: bool,
     checksum_salt: u16,
@@ -34,14 +31,8 @@ impl Prober {
     const IPV4_HEADER_LENGTH: u16 = 20;
     const ICMP_HEADER_LENGTH: u16 = 8;
 
-    pub fn new(
-        callback: ProbeCallback,
-        phase: ProbePhase,
-        encode_timestamp: bool,
-        checksum_salt: u16,
-    ) -> Self {
+    pub fn new(phase: ProbePhase, encode_timestamp: bool, checksum_salt: u16) -> Self {
         Self {
-            callback,
             phase,
             encode_timestamp,
             checksum_salt,
@@ -154,10 +145,6 @@ impl Prober {
 
         Ok(result)
     }
-
-    pub fn run_callback(&self, probe_result: ProbeResult) {
-        (self.callback)(probe_result);
-    }
 }
 
 #[cfg(test)]
@@ -182,14 +169,14 @@ mod test {
 
     #[test]
     fn test_pack() {
-        let prober = Prober::new(|_| {}, ProbePhase::Pre, true, 0);
+        let prober = Prober::new(ProbePhase::Pre, true, 0);
         let packet = prober.pack((*IP1, 32), *IP2);
         println!("{:#?}", packet);
     }
 
     #[test]
     fn test_parse() {
-        let prober = Prober::new(|_| {}, ProbePhase::Pre, true, 0);
+        let prober = Prober::new(ProbePhase::Pre, true, 0);
         {
             let result = prober.parse(TLE_WITH_DATA.packet(), true).unwrap();
             println!("{:#?}", result);

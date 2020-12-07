@@ -10,7 +10,7 @@ use std::{
 };
 
 use crate::{
-    prober::{ProbeUnit, Prober},
+    prober::{ProbeResult, ProbeUnit, Prober},
     OPT,
 };
 use pnet::{
@@ -37,7 +37,7 @@ pub struct NetworkManager {
 }
 
 impl NetworkManager {
-    pub fn new(prober: Prober) -> Option<Self> {
+    pub fn new(prober: Prober, recv_tx: MpscTx<ProbeResult>) -> Option<Self> {
         let (send_tx, send_rx) = mpsc::unbounded_channel();
 
         let prober = Arc::new(prober);
@@ -51,7 +51,12 @@ impl NetworkManager {
             stopped.clone(),
             sent_packets.clone(),
         );
-        Self::start_recving_task(prober.clone(), stopped.clone(), recv_packets.clone());
+        Self::start_recving_task(
+            prober.clone(),
+            stopped.clone(),
+            recv_packets.clone(),
+            recv_tx,
+        );
 
         Some(Self {
             prober,
@@ -117,6 +122,7 @@ impl NetworkManager {
         prober: Arc<Prober>,
         stopped: Arc<AtomicBool>,
         recv_packets: Arc<AtomicU64>,
+        recv_tx: MpscTx<ProbeResult>,
     ) {
         tokio::spawn(async move {
             log::info!("receiving task started");
@@ -131,7 +137,7 @@ impl NetworkManager {
                 if let Ok(Some((ip_packet, _addr))) = iter.next_with_timeout(timeout) {
                     match prober.parse(ip_packet.packet(), false) {
                         Ok(result) => {
-                            prober.run_callback(result);
+                            let _ = recv_tx.send(result);
                             recv_packets.fetch_add(1, Ordering::SeqCst);
                         }
                         Err(e) => {
