@@ -101,18 +101,25 @@ impl Prober {
         return ip_packet.consume_to_immutable();
     }
 
-    pub fn parse(&self, packet: Box<dyn Packet>) -> Result<ProbeResult> {
+    pub fn parse(&self, packet: Box<dyn Packet>, ignore_port: bool) -> Result<ProbeResult> {
         let ip_packet = Ipv4Packet::new(packet.packet()).ok_or(Error::ParseError)?;
         let icmp_packet = IcmpPacket::new(ip_packet.payload()).ok_or(Error::ParseError)?;
-        let res_ip_packet = Ipv4Packet::new(icmp_packet.payload()).ok_or(Error::ParseError)?;
+        let res_ip_packet =
+            Ipv4Packet::new(&ip_packet.payload()[Self::ICMP_HEADER_LENGTH as usize..])
+                .ok_or(Error::ParseError)?;
         let res_udp_packet = UdpPacket::new(res_ip_packet.payload()).ok_or(Error::ParseError)?;
 
         let destination = res_ip_packet.get_destination();
         let src_port = res_udp_packet.get_source();
         let expected_src_port = crate::utils::ip_checksum(destination, self.checksum_salt);
-        if src_port != expected_src_port {
+        if src_port != expected_src_port && !ignore_port {
             return Err(Error::UnexpectedIcmpSrcPort(src_port, expected_src_port));
         }
+
+        // log::info!("{:#?}", ip_packet);
+        // log::info!("{:#?}", icmp_packet);
+        // log::info!("{:#?}", res_ip_packet);
+        // log::info!("{:#?}", res_udp_packet);
 
         let initial_ttl = {
             let ttl = res_ip_packet.get_identification() & 0x1f;
@@ -129,6 +136,9 @@ impl Prober {
 
         let (distance, from_destination) = {
             if icmp_type == IcmpTypes::DestinationUnreachable && [1, 2, 3].contains(&icmp_code.0) {
+                if initial_ttl < dst_ttl {
+                    return Err(Error::InvalidDistance(initial_ttl, dst_ttl));
+                }
                 (initial_ttl - dst_ttl + 1, true)
             } else if icmp_type == IcmpTypes::TimeExceeded {
                 (initial_ttl, false)
@@ -159,10 +169,20 @@ impl Prober {
 mod test {
     use super::*;
 
+    macro_rules! packet {
+        ($bin:literal) => {
+            Ipv4Packet::owned(include_bytes!($bin)[14..].to_vec()).unwrap()
+        };
+    }
+
     lazy_static! {
         static ref IP1: Ipv4Addr = "1.2.3.4".parse().unwrap();
         static ref IP2: Ipv4Addr = "4.3.2.1".parse().unwrap();
-        static ref PACKET: &'static [u8] = include_bytes!("../res/unreachable.bin");
+        static ref TLE_WITHOUT_DATA: Ipv4Packet<'static> =
+            packet!("../res/frame_tle_without_data.bin");
+        static ref TLE_WITH_DATA: Ipv4Packet<'static> = packet!("../res/frame_tle_with_data.bin");
+        static ref UNR_WITH_DATA: Ipv4Packet<'static> =
+            packet!("../res/frame_unreachable_with_data.bin");
     }
 
     #[test]
@@ -170,9 +190,41 @@ mod test {
         let prober = Prober::new(|_| {}, ProbePhase::Pre, 33434, "hello".to_owned(), true, 0);
         let packet = prober.pack((*IP1, 32), *IP2);
         println!("{:#?}", packet);
+    }
 
-        let result = prober.parse(Box::new(Ipv4Packet::new(*PACKET).unwrap())).unwrap();
-        println!("{:#?}", result);
+    #[test]
+    fn test_parse() {
+        let prober = Prober::new(|_| {}, ProbePhase::Main, 33434, "".to_owned(), true, 0);
+        {
+            let result = prober
+                .parse(Box::new(TLE_WITH_DATA.to_immutable()), true)
+                .unwrap();
+            println!("{:#?}", result);
+            assert_eq!(result.destination.to_string(), "59.78.31.75");
+            assert_eq!(result.responder.to_string(), "59.78.37.254");
+            assert_eq!(result.distance, 2);
+            assert_eq!(result.from_destination, false);
+        }
+        {
+            let result = prober
+                .parse(Box::new(TLE_WITHOUT_DATA.to_immutable()), true)
+                .unwrap();
+            println!("{:#?}", result);
+            assert_eq!(result.destination.to_string(), "59.78.173.84");
+            assert_eq!(result.responder.to_string(), "101.4.135.214");
+            assert_eq!(result.distance, 11);
+            assert_eq!(result.from_destination, false);
+        }
+        {
+            let result = prober
+                .parse(Box::new(UNR_WITH_DATA.to_immutable()), true)
+                .unwrap();
+            println!("{:#?}", result);
+            assert_eq!(result.destination.to_string(), "59.78.17.126");
+            assert_eq!(result.responder.to_string(), "59.78.17.126");
+            assert_eq!(result.distance, 6);
+            assert_eq!(result.from_destination, true);
+        }
     }
 
     // TODO: add more realistic tests
