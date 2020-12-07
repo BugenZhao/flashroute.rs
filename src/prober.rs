@@ -100,8 +100,8 @@ impl Prober {
         return ip_packet.consume_to_immutable();
     }
 
-    pub fn parse(&self, packet: Box<dyn Packet>) -> Result<ProbeResult> {
-        let ip_packet = Ipv4Packet::new(packet.packet()).ok_or(Error::ParseError)?;
+    pub fn parse(&self, packet: &[u8]) -> Result<ProbeResult> {
+        let ip_packet = Ipv4Packet::new(packet).ok_or(Error::ParseError)?;
         let icmp_packet = IcmpPacket::new(ip_packet.payload()).ok_or(Error::ParseError)?;
         let res_ip_packet = Ipv4Packet::new(icmp_packet.payload()).ok_or(Error::ParseError)?;
         let res_udp_packet = UdpPacket::new(res_ip_packet.payload()).ok_or(Error::ParseError)?;
