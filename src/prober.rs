@@ -1,4 +1,5 @@
 use crate::error::*;
+use crate::OPT;
 use pnet::packet::{icmp::*, ip::IpNextHeaderProtocols, ipv4::*, udp::*, Packet};
 use std::net::Ipv4Addr;
 
@@ -25,8 +26,6 @@ pub type ProbeCallback = fn(result: ProbeResult) -> ();
 pub struct Prober {
     callback: ProbeCallback,
     phase: ProbePhase,
-    dst_port: u16,
-    payload_msg: String,
     encode_timestamp: bool,
     checksum_salt: u16,
 }
@@ -38,16 +37,12 @@ impl Prober {
     pub fn new(
         callback: ProbeCallback,
         phase: ProbePhase,
-        dst_port: u16,
-        payload_msg: String,
         encode_timestamp: bool,
         checksum_salt: u16,
     ) -> Self {
         Self {
             callback,
             phase,
-            dst_port,
-            payload_msg,
             encode_timestamp,
             checksum_salt,
         }
@@ -71,9 +66,9 @@ impl Prober {
 
         let mut udp_packet = MutableUdpPacket::owned(vec![0u8; expect_udp_size as usize]).unwrap();
         udp_packet.set_source(crate::utils::ip_checksum(dst_ip, self.checksum_salt)); // TODO: is this ok?
-        udp_packet.set_destination(self.dst_port);
+        udp_packet.set_destination(OPT.dst_port);
         udp_packet.set_length(expect_udp_size);
-        udp_packet.set_payload(self.payload_msg.as_bytes());
+        udp_packet.set_payload(OPT.payload_message.as_bytes());
 
         let ip_id = {
             let mut id = (ttl as u16 & 0x1F) | ((self.phase as u16 & 0x1) << 5);
@@ -187,14 +182,14 @@ mod test {
 
     #[test]
     fn test_pack() {
-        let prober = Prober::new(|_| {}, ProbePhase::Pre, 33434, "hello".to_owned(), true, 0);
+        let prober = Prober::new(|_| {}, ProbePhase::Pre, true, 0);
         let packet = prober.pack((*IP1, 32), *IP2);
         println!("{:#?}", packet);
     }
 
     #[test]
     fn test_parse() {
-        let prober = Prober::new(|_| {}, ProbePhase::Main, 33434, "".to_owned(), true, 0);
+        let prober = Prober::new(|_| {}, ProbePhase::Pre, true, 0);
         {
             let result = prober.parse(TLE_WITH_DATA.packet(), true).unwrap();
             println!("{:#?}", result);
@@ -220,7 +215,4 @@ mod test {
             assert_eq!(result.from_destination, true);
         }
     }
-
-    // TODO: add more realistic tests
-    // TODO: add tests for parsing
 }
