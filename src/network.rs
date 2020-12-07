@@ -11,7 +11,7 @@ use std::{
 
 use crate::{
     prober::{ProbeUnit, Prober},
-    LOCAL_IPV4_ADDR, OPT,
+    OPT,
 };
 use pnet::{
     packet::{
@@ -75,7 +75,7 @@ impl NetworkManager {
 
             let protocol = Layer3(Udp);
             let (mut sender, _) = transport_channel(0, protocol).unwrap();
-            let local_ip = *LOCAL_IPV4_ADDR;
+            let local_ip = OPT.local_addr;
             let dummy_addr = IpAddr::V4("0.0.0.0".parse().unwrap());
 
             let mut sent_this_sec = 0u64;

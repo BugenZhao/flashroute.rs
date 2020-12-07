@@ -15,9 +15,11 @@ use opt::Opt;
 pub use structopt::StructOpt;
 
 lazy_static! {
-    static ref OPT: Opt = Opt::from_args();
-    static ref LOCAL_IPV4_ADDR: std::net::Ipv4Addr =
-        crate::utils::get_interface_ipv4_addr(&(*OPT).interface).unwrap();
+    static ref OPT: Opt = if cfg!(test) {
+        opt::get_test_opt()
+    } else {
+        opt::get_opt()
+    };
 }
 
 fn main() {
