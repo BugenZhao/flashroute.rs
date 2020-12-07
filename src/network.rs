@@ -21,6 +21,7 @@ use pnet::{
     transport::{transport_channel, TransportChannelType::Layer3},
 };
 use tokio::sync::{mpsc, oneshot};
+use Ordering::SeqCst;
 
 type MpscTx<T> = mpsc::UnboundedSender<T>;
 type MpscRx<T> = mpsc::UnboundedReceiver<T>;
@@ -105,7 +106,7 @@ impl NetworkManager {
                     let packet = prober.pack(dst_unit, local_ip);
                     let _ = sender.send_to(packet, dummy_addr);
 
-                    sent_packets.fetch_add(1, Ordering::SeqCst);
+                    sent_packets.fetch_add(1, SeqCst);
                     sent_this_sec += 1;
                 }
 
@@ -138,7 +139,7 @@ impl NetworkManager {
                     match prober.parse(ip_packet.packet(), false) {
                         Ok(result) => {
                             let _ = recv_tx.send(result);
-                            recv_packets.fetch_add(1, Ordering::SeqCst);
+                            recv_packets.fetch_add(1, SeqCst);
                         }
                         Err(e) => {
                             log::warn!("error occurred while parsing: {}", e);
@@ -159,7 +160,15 @@ impl NetworkManager {
         let _ = self.send_tx.send(unit);
     }
 
-    pub fn stop(&mut self) {
-        self.stopped.store(true, Ordering::SeqCst);
+    pub fn stop(&self) {
+        self.stopped.store(true, SeqCst);
+    }
+
+    pub fn sent_packets(&self) -> u64 {
+        self.sent_packets.load(SeqCst)
+    }
+
+    pub fn recv_packets(&self) -> u64 {
+        self.recv_packets.load(SeqCst)
     }
 }
