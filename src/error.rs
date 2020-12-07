@@ -10,6 +10,8 @@ pub enum Error {
     ParseError,
     #[error("unexpected icmp packet with source port `{0}`, expected `{1}`")]
     UnexpectedIcmpSrcPort(u16, u16),
+    #[error("invalid distance with initial_ttl `{0}` and dst_ttl `{1}`")]
+    InvalidDistance(u8, u8),
     #[error("unexpected icmp packet with type `{0:?}` and code `{1:?}`")]
     UnexpectedIcmpType(pnet::packet::icmp::IcmpType, pnet::packet::icmp::IcmpCode),
     #[error("network error: {0}")]
