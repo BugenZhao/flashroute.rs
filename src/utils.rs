@@ -55,15 +55,18 @@ pub async fn process_topo(topo: TopoGraph) -> Result<()> {
     let viz_path = OPT.output_viz.to_str().unwrap();
     let mut dot_file = tokio::fs::File::create(dot_path).await?;
 
-    for s in [
-        "graph {\n    overlap = false; splines = true;\n",
-        format!("{}", dot_content).as_str(),
-        "}\n",
-    ]
-    .iter()
-    {
-        dot_file.write(s.as_bytes()).await?;
+    macro_rules! write {
+        ($str:expr) => {
+            dot_file.write($str.as_bytes()).await?;
+        };
     }
+
+    write!("graph {\n    overlap = false; splines = true;\n");
+    for s in format!("{}", dot_content).lines() {
+        write!(s);
+        write!("\n");
+    }
+    write!("}\n");
 
     tokio::process::Command::new("dot")
         .arg("-K")

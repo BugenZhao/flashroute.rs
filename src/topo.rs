@@ -46,16 +46,13 @@ impl Topo {
             results.sort_by_key(|r| r.distance);
             if let Some(first) = results.first() {
                 let dist = first.distance;
-                if dist <= 2 {
+                if dist <= 5 {
                     graph.add_node(first.responder);
                     graph.add_edge(local.responder, first.responder, dist);
                 }
             }
             for (a, b) in results.iter().zip(results.iter().skip(1)) {
                 let dist = b.distance - a.distance;
-                if dist > 8 {
-                    continue;
-                }
                 graph.add_node(b.responder);
                 graph.add_edge(a.responder, b.responder, dist);
             }
