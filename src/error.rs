@@ -14,6 +14,8 @@ pub enum Error {
     InvalidDistance(u8, u8),
     #[error("unexpected icmp packet with type `{0:?}` and code `{1:?}`")]
     UnexpectedIcmpType(pnet::packet::icmp::IcmpType, pnet::packet::icmp::IcmpCode),
+    #[error("")]
+    BadGrainOrNet(u8, ipnet::Ipv4Net),
     #[error("network error: {0}")]
     NetworkError(#[from] std::io::Error), // thus io::Error can implicitly `into` NetworkError
 }

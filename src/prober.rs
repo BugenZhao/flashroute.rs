@@ -1,55 +1,42 @@
 use crate::error::*;
+use crate::OPT;
 use pnet::packet::{icmp::*, ip::IpNextHeaderProtocols, ipv4::*, udp::*, Packet};
 use std::net::Ipv4Addr;
 
 #[derive(Default, Debug)]
-pub struct ProbeDebugResult {}
+pub struct ProbeDebugResult {
+    pub rtt: u16,
+}
 
 #[derive(Debug)]
 pub struct ProbeResult {
-    destination: Ipv4Addr,
-    responder: Ipv4Addr,
-    distance: u8,
-    from_destination: bool,
-    debug: ProbeDebugResult,
+    pub destination: Ipv4Addr,
+    pub responder: Ipv4Addr,
+    pub distance: u8,
+    pub from_destination: bool,
+    pub debug: ProbeDebugResult,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum ProbePhase {
     Pre = 0,
     Main = 1,
 }
 
-pub type ProbeCallback = fn(result: ProbeResult) -> ();
-
+#[derive(Debug)]
 pub struct Prober {
-    callback: ProbeCallback,
-    phase: ProbePhase,
-    dst_port: u16,
-    payload_msg: String,
+    pub phase: ProbePhase,
     encode_timestamp: bool,
-    checksum_salt: u16,
 }
 
 impl Prober {
     const IPV4_HEADER_LENGTH: u16 = 20;
     const ICMP_HEADER_LENGTH: u16 = 8;
 
-    pub fn new(
-        callback: ProbeCallback,
-        phase: ProbePhase,
-        dst_port: u16,
-        payload_msg: String,
-        encode_timestamp: bool,
-        checksum_salt: u16,
-    ) -> Self {
+    pub fn new(phase: ProbePhase, encode_timestamp: bool) -> Self {
         Self {
-            callback,
             phase,
-            dst_port,
-            payload_msg,
             encode_timestamp,
-            checksum_salt,
         }
     }
 }
@@ -70,10 +57,10 @@ impl Prober {
         let expect_udp_size = expect_total_size - Self::IPV4_HEADER_LENGTH;
 
         let mut udp_packet = MutableUdpPacket::owned(vec![0u8; expect_udp_size as usize]).unwrap();
-        udp_packet.set_source(crate::utils::ip_checksum(dst_ip, self.checksum_salt)); // TODO: is this ok?
-        udp_packet.set_destination(self.dst_port);
+        udp_packet.set_source(crate::utils::ip_checksum(dst_ip, OPT.salt)); // TODO: is this ok?
+        udp_packet.set_destination(OPT.dst_port);
         udp_packet.set_length(expect_udp_size);
-        udp_packet.set_payload(self.payload_msg.as_bytes());
+        udp_packet.set_payload(OPT.payload_message.as_bytes());
 
         let ip_id = {
             let mut id = (ttl as u16 & 0x1F) | ((self.phase as u16 & 0x1) << 5);
@@ -111,7 +98,7 @@ impl Prober {
 
         let destination = res_ip_packet.get_destination();
         let src_port = res_udp_packet.get_source();
-        let expected_src_port = crate::utils::ip_checksum(destination, self.checksum_salt);
+        let expected_src_port = crate::utils::ip_checksum(destination, OPT.salt);
         if src_port != expected_src_port && !ignore_port {
             return Err(Error::UnexpectedIcmpSrcPort(src_port, expected_src_port));
         }
@@ -149,19 +136,29 @@ impl Prober {
 
         // TODO: extract more data for debug use
 
+        let rtt = if self.encode_timestamp {
+            let send = (((res_ip_packet.get_identification() >> 6) & 0x3FF)
+                | (((res_ip_packet.get_total_length() >> 1) & 0x3F) << 10))
+                as u32;
+            let recv = crate::utils::timestamp_ms_u16() as u32;
+            if recv >= send {
+                recv - send
+            } else {
+                recv + u16::MAX as u32 - send
+            }
+        } else {
+            0
+        } as u16;
+
         let result = ProbeResult {
             destination,
             responder: ip_packet.get_source(),
             distance,
             from_destination,
-            debug: ProbeDebugResult {},
+            debug: ProbeDebugResult { rtt },
         };
 
         Ok(result)
-    }
-
-    pub fn run_callback(&self, probe_result: ProbeResult) {
-        (self.callback)(probe_result);
     }
 }
 
@@ -187,14 +184,14 @@ mod test {
 
     #[test]
     fn test_pack() {
-        let prober = Prober::new(|_| {}, ProbePhase::Pre, 33434, "hello".to_owned(), true, 0);
+        let prober = Prober::new(ProbePhase::Pre, true);
         let packet = prober.pack((*IP1, 32), *IP2);
         println!("{:#?}", packet);
     }
 
     #[test]
     fn test_parse() {
-        let prober = Prober::new(|_| {}, ProbePhase::Main, 33434, "".to_owned(), true, 0);
+        let prober = Prober::new(ProbePhase::Pre, true);
         {
             let result = prober.parse(TLE_WITH_DATA.packet(), true).unwrap();
             println!("{:#?}", result);
@@ -220,7 +217,4 @@ mod test {
             assert_eq!(result.from_destination, true);
         }
     }
-
-    // TODO: add more realistic tests
-    // TODO: add tests for parsing
 }
