@@ -4,8 +4,9 @@ use std::{
 };
 
 use pnet::datalink::NetworkInterface;
+use petgraph::dot::Dot;
 
-use crate::error::*;
+use crate::{error::*, topo::TopoGraph};
 
 pub fn get_interface_ipv4_addr(ni: &NetworkInterface) -> Option<Ipv4Addr> {
     for ip in ni.ips.iter().map(|net| net.ip()) {
@@ -43,4 +44,9 @@ pub fn timestamp_ms_u16() -> u16 {
 
 pub fn ip_checksum(addr: Ipv4Addr, salt: u16) -> u16 {
     pnet::util::checksum(&addr.octets(), 0) + salt
+}
+
+pub fn process_topo(topo: TopoGraph) {
+    let dot = Dot::new(&topo);
+    log::info!("{}", dot);
 }

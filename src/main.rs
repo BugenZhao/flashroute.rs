@@ -8,6 +8,7 @@ mod error;
 mod network;
 mod opt;
 mod prober;
+mod topo;
 mod tracerouter;
 mod utils;
 
@@ -16,6 +17,7 @@ use std::sync::Arc;
 use opt::Opt;
 pub use structopt::StructOpt;
 use tracerouter::Tracerouter;
+use utils::process_topo;
 
 lazy_static! {
     static ref OPT: Opt = if cfg!(test) {
@@ -42,5 +44,7 @@ async fn main() {
         r.stop();
     });
 
-    tr.run().await.unwrap();
+    let topo = tr.run().await.unwrap();
+    process_topo(topo);
+    tr.summary();
 }
