@@ -84,20 +84,19 @@ impl NetworkManager {
         let _dummy_addr = IpAddr::V4("0.0.0.0".parse().unwrap());
 
         tokio::spawn(async move {
-            log::info!("sending task started [{:?}]", prober.phase);
+            log::info!("[{:?}] sending task started", prober.phase);
 
             let mut sent_this_sec = 0u64;
             let mut last_seen = SystemTime::now();
 
             let one_sec = Duration::from_secs(1);
-            let timeout = Duration::from_millis(100);
 
             loop {
                 tokio::select! {
                     _ = &mut stop_rx => {
                         break;
                     }
-                    Ok(Some(dst_unit)) = tokio::time::timeout(timeout, rx.recv()) => {
+                    Some(dst_unit) = rx.recv() => {
                         // Probing rate control
                         let now = SystemTime::now();
                         let time_elapsed = now.duration_since(last_seen).unwrap();
@@ -120,7 +119,7 @@ impl NetworkManager {
                 }
             }
 
-            log::info!("sending task stopped [{:?}]", prober.phase);
+            log::info!("[{:?}] sending task stopped", prober.phase);
         });
 
         Ok(())
@@ -135,21 +134,22 @@ impl NetworkManager {
         let protocol = Layer3(Icmp);
         let (_, mut receiver) = transport_channel(Self::RECV_BUF_SIZE, protocol)?;
 
-        tokio::spawn(async move {
-            log::info!("receiving task started [{:?}]", prober.phase);
+        tokio::task::spawn_blocking(move || {
+            // pnet io is synchronous, must be spawned with blocking
+            log::info!("[{:?}] receiving task started", prober.phase);
 
-            let timeout = Duration::from_millis(100);
+            let io_timeout = Duration::from_millis(10);
             let mut iter = pnet::transport::ipv4_packet_iter(&mut receiver);
 
             loop {
-                if stopped.load(Ordering::Acquire) {
+                if stopped.load(SeqCst) {
                     break;
                 }
 
-                if let Ok(Some((ip_packet, _addr))) = iter.next_with_timeout(timeout) {
+                if let Ok(Some((ip_packet, _addr))) = iter.next_with_timeout(io_timeout) {
                     match prober.parse(ip_packet.packet(), false) {
                         Ok(result) => {
-                            log::debug!("RECV: {:?}", result);
+                            log::info!("[{:?}] RECV: {:?}", prober.phase, result);
                             let _ = recv_tx.send(result);
                             recv_packets.fetch_add(1, SeqCst);
                         }
@@ -160,14 +160,21 @@ impl NetworkManager {
                 }
             }
 
-            log::info!("receiving task stopped [{:?}]", prober.phase);
+            log::info!("[{:?}] receiving task stopped", prober.phase);
         });
 
         Ok(())
     }
 
     pub fn schedule_probe(&self, unit: ProbeUnit) {
-        let _ = self.send_tx.send(unit);
+        match self.send_tx.send(unit) {
+            Ok(_) => {
+                log::debug!("SCHEDULE: {:?}", unit);
+            }
+            Err(e) => {
+                log::error!("{:?}", e);
+            }
+        }
     }
 
     pub fn stop(&mut self) {

@@ -28,6 +28,7 @@ impl DstCtrlBlock {
     }
 
     pub fn update_split_ttl(&self, new_ttl: u8, accurate: bool) {
+        log::debug!("SPLIT_TTL: {} => {}", self.addr, new_ttl);
         if self.accurate_distance.load(SeqCst) {
             return;
         }

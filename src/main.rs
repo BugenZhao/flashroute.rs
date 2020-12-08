@@ -13,8 +13,6 @@ mod utils;
 
 use std::sync::Arc;
 
-use async_ctrlc::CtrlC;
-
 use opt::Opt;
 pub use structopt::StructOpt;
 use tracerouter::Tracerouter;
@@ -30,23 +28,18 @@ lazy_static! {
 #[tokio::main]
 async fn main() {
     env_logger::builder()
-        .filter_level(log::LevelFilter::Debug)
+        .filter_level(log::LevelFilter::Info)
         .init();
 
-    log::info!("{:#?}", *OPT);
+    log::debug!("{:#?}", *OPT);
 
     let tr = Arc::new(Tracerouter::new().unwrap());
-    let running = tr.clone();
+    let r = tr.clone();
 
-    tokio::select! {
-        _ = CtrlC::new().unwrap() => {
-            log::info!("Stopping...");
-            running.stop();
-        }
-        result = tokio::spawn(async move { tr.start() }) => {
-            if result.is_err() {
-                log::error!("{:?}", result.err().unwrap())
-            }
-        }
-    };
+    tokio::spawn(async move {
+        tokio::signal::ctrl_c().await.unwrap();
+        r.stop();
+    });
+
+    tr.run().await.unwrap();
 }

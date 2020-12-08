@@ -81,14 +81,22 @@ impl Tracerouter {
 }
 
 impl Tracerouter {
-    pub fn start(&self) -> Result<()> {
-        self.start_preprobing_task()?;
-        self.start_probing_task()?;
+    pub async fn run(&self) -> Result<()> {
+        self.start_preprobing_task().await?;
+        self.start_probing_task().await?;
+
+        self.stop();
         Ok(())
     }
 
     pub fn stop(&self) {
         self.stopped.store(true, SeqCst);
+        log::info!(
+            "sent preprobes: {:?}, sent probes: {:?}, received responses: {:?}",
+            self.sent_preprobes,
+            self.sent_probes,
+            self.recv_responses
+        );
     }
 
     fn stopped(&self) -> bool {
@@ -97,7 +105,7 @@ impl Tracerouter {
 }
 
 impl Tracerouter {
-    fn start_preprobing_task(&self) -> Result<()> {
+    async fn start_preprobing_task(&self) -> Result<()> {
         let prober = Prober::new(ProbePhase::Pre, true, 0);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
         let mut nm = NetworkManager::new(prober, recv_tx)?;
@@ -126,8 +134,9 @@ impl Tracerouter {
         }
         // WORKER END
 
-        if !self.stopped.load(SeqCst) {
-            std::thread::sleep(Duration::from_secs(3));
+        if !self.stopped() {
+            log::info!("[Pre] Waiting...");
+            tokio::time::sleep(Duration::from_secs(3)).await;
         }
         nm.stop();
         let _ = stop_tx.send(());
@@ -142,6 +151,7 @@ impl Tracerouter {
         if !result.from_destination {
             return;
         }
+        log::debug!("[Pre] CALLBACK: {}", result.destination);
 
         let key = Self::addr_to_key(result.destination);
         if let Some(dcb) = targets.get(&key) {
@@ -163,7 +173,7 @@ impl Tracerouter {
 }
 
 impl Tracerouter {
-    fn start_probing_task(&self) -> Result<()> {
+    async fn start_probing_task(&self) -> Result<()> {
         let prober = Prober::new(ProbePhase::Main, true, 0);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
         let mut nm = NetworkManager::new(prober, recv_tx)?;
@@ -194,6 +204,8 @@ impl Tracerouter {
         while !keys.is_empty() {
             let mut new_keys = Vec::new();
             new_keys.reserve(keys.len());
+
+            log::debug!("[Main] loop");
             for key in keys.into_iter() {
                 if self.stopped() {
                     break;
@@ -201,6 +213,7 @@ impl Tracerouter {
                 let dcb = self.targets.get(&key).unwrap();
                 match (dcb.pull_forward_task(), dcb.pull_backward_task()) {
                     (None, None) => {
+                        log::warn!("{} has no tasks!", dcb.addr);
                         continue;
                     }
                     (None, Some(t2)) => {
@@ -220,12 +233,15 @@ impl Tracerouter {
 
             let duration = SystemTime::now().duration_since(last_seen).unwrap();
             if duration < one_sec {
-                std::thread::sleep(one_sec - duration);
+                tokio::time::sleep(one_sec - duration).await;
             }
             last_seen = SystemTime::now();
         }
         // WORKER END
-
+        if !self.stopped() {
+            log::info!("[Main] Waiting...");
+            tokio::time::sleep(Duration::from_secs(5)).await;
+        }
         nm.stop();
         let _ = stop_tx.send(());
 
@@ -241,6 +257,8 @@ impl Tracerouter {
         forward_discovery_set: &mut HashSet<Ipv4Addr>,
         result: ProbeResult,
     ) {
+        log::debug!("[Main] CALLBACK: {}", result.destination);
+
         let key = Self::addr_to_key(result.destination);
         if let Some(dcb) = targets.get(&key) {
             if !result.from_destination {
