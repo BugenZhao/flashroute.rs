@@ -25,18 +25,16 @@ pub enum ProbePhase {
 pub struct Prober {
     pub phase: ProbePhase,
     encode_timestamp: bool,
-    checksum_salt: u16,
 }
 
 impl Prober {
     const IPV4_HEADER_LENGTH: u16 = 20;
     const ICMP_HEADER_LENGTH: u16 = 8;
 
-    pub fn new(phase: ProbePhase, encode_timestamp: bool, checksum_salt: u16) -> Self {
+    pub fn new(phase: ProbePhase, encode_timestamp: bool) -> Self {
         Self {
             phase,
             encode_timestamp,
-            checksum_salt,
         }
     }
 }
@@ -57,7 +55,7 @@ impl Prober {
         let expect_udp_size = expect_total_size - Self::IPV4_HEADER_LENGTH;
 
         let mut udp_packet = MutableUdpPacket::owned(vec![0u8; expect_udp_size as usize]).unwrap();
-        udp_packet.set_source(crate::utils::ip_checksum(dst_ip, self.checksum_salt)); // TODO: is this ok?
+        udp_packet.set_source(crate::utils::ip_checksum(dst_ip, OPT.salt)); // TODO: is this ok?
         udp_packet.set_destination(OPT.dst_port);
         udp_packet.set_length(expect_udp_size);
         udp_packet.set_payload(OPT.payload_message.as_bytes());
@@ -98,7 +96,7 @@ impl Prober {
 
         let destination = res_ip_packet.get_destination();
         let src_port = res_udp_packet.get_source();
-        let expected_src_port = crate::utils::ip_checksum(destination, self.checksum_salt);
+        let expected_src_port = crate::utils::ip_checksum(destination, OPT.salt);
         if src_port != expected_src_port && !ignore_port {
             return Err(Error::UnexpectedIcmpSrcPort(src_port, expected_src_port));
         }
@@ -170,14 +168,14 @@ mod test {
 
     #[test]
     fn test_pack() {
-        let prober = Prober::new(ProbePhase::Pre, true, 0);
+        let prober = Prober::new(ProbePhase::Pre, true);
         let packet = prober.pack((*IP1, 32), *IP2);
         println!("{:#?}", packet);
     }
 
     #[test]
     fn test_parse() {
-        let prober = Prober::new(ProbePhase::Pre, true, 0);
+        let prober = Prober::new(ProbePhase::Pre, true);
         {
             let result = prober.parse(TLE_WITH_DATA.packet(), true).unwrap();
             println!("{:#?}", result);

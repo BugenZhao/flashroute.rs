@@ -12,6 +12,8 @@ pub struct Opt {
     pub proximity_span: u32,
 
     // Probing
+    #[structopt(long, default_value = "8")]
+    pub default_ttl: u8,
     #[structopt(long, default_value = "16")]
     pub split_ttl: u8,
     #[structopt(long, default_value = "32")]
@@ -38,6 +40,8 @@ pub struct Opt {
     // Misc
     #[structopt(long, default_value = "114514")]
     pub seed: u64,
+    #[structopt(long, default_value = "0")]
+    pub salt: u16,
 
     // Target
     #[structopt(default_value = "115.159.0.0/16")]

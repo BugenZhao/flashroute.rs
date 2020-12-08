@@ -45,7 +45,10 @@ impl Tracerouter {
         let mut targets = DcbMap::new();
         targets.reserve(Self::targets_count());
         for addr in Self::random_targets() {
-            targets.insert(Self::addr_to_key(addr), DstCtrlBlock::new(addr, 8));
+            targets.insert(
+                Self::addr_to_key(addr),
+                DstCtrlBlock::new(addr, OPT.default_ttl),
+            );
         }
 
         Ok(Self {
@@ -106,7 +109,7 @@ impl Tracerouter {
 
 impl Tracerouter {
     async fn start_preprobing_task(&self) -> Result<()> {
-        let prober = Prober::new(ProbePhase::Pre, true, 0);
+        let prober = Prober::new(ProbePhase::Pre, true);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
         let mut nm = NetworkManager::new(prober, recv_tx)?;
         let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
@@ -174,7 +177,7 @@ impl Tracerouter {
 
 impl Tracerouter {
     async fn start_probing_task(&self) -> Result<()> {
-        let prober = Prober::new(ProbePhase::Main, true, 0);
+        let prober = Prober::new(ProbePhase::Main, true);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
         let mut nm = NetworkManager::new(prober, recv_tx)?;
         let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
