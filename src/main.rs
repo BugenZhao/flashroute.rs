@@ -14,8 +14,8 @@ mod utils;
 
 use std::sync::Arc;
 
+use error::Result;
 use opt::Opt;
-pub use structopt::StructOpt;
 use tracerouter::Tracerouter;
 use utils::process_topo;
 
@@ -28,7 +28,7 @@ lazy_static! {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     env_logger::builder()
         .filter_level(log::LevelFilter::Info)
         .parse_default_env()
@@ -36,15 +36,16 @@ async fn main() {
 
     log::debug!("{:#?}", *OPT);
 
-    let tr = Arc::new(Tracerouter::new().unwrap());
+    let tr = Arc::new(Tracerouter::new()?);
     let r = tr.clone();
-
     tokio::spawn(async move {
         tokio::signal::ctrl_c().await.unwrap();
         r.stop();
     });
 
-    let topo = tr.run().await.unwrap();
-    process_topo(topo);
+    let topo = tr.run().await?;
+    process_topo(topo).await?;
     tr.summary();
+
+    Ok(())
 }

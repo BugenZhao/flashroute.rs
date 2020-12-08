@@ -36,6 +36,10 @@ pub struct Opt {
     // Output
     #[structopt(short, long, default_value = "fr.out")]
     pub output: PathBuf,
+    #[structopt(long, default_value = "fr.dot")]
+    pub output_dot: PathBuf,
+    #[structopt(long, default_value = "fr.png")]
+    pub output_viz: PathBuf,
 
     // Misc
     #[structopt(long, default_value = "114514")]

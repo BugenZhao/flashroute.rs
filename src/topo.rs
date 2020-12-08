@@ -46,8 +46,12 @@ impl Topo {
             results.sort_by_key(|r| r.distance);
             let it = dummy.iter().chain(results.iter());
             for (a, b) in it.clone().zip(it.skip(1)) {
+                let dist = b.distance - a.distance;
+                if dist > 8 {
+                    continue;
+                }
                 graph.add_node(b.responder);
-                graph.add_edge(a.responder, b.responder, b.distance - a.distance);
+                graph.add_edge(a.responder, b.responder, dist);
             }
         };
 
