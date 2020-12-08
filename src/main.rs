@@ -43,4 +43,7 @@ async fn main() {
     });
 
     tr.run().await.unwrap();
+
+    #[cfg(windows)]
+    std::process::exit(0);
 }

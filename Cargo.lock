@@ -102,6 +102,7 @@ dependencies = [
  "lazy_static",
  "log 0.4.11",
  "pnet",
+ "pnet_sys",
  "rand",
  "structopt",
  "thiserror",

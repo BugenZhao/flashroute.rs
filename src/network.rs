@@ -134,6 +134,7 @@ impl NetworkManager {
         let protocol = Layer3(Icmp);
         let (_, mut receiver) = transport_channel(Self::RECV_BUF_SIZE, protocol)?;
 
+        #[cfg(unix)]
         tokio::task::spawn_blocking(move || {
             // pnet io is synchronous, must be spawned with blocking
             log::info!("[{:?}] receiving task started", prober.phase);
@@ -162,6 +163,52 @@ impl NetworkManager {
 
             log::info!("[{:?}] receiving task stopped", prober.phase);
         });
+
+        #[cfg(windows)]
+        {
+            let fd = receiver.socket.fd;
+
+            tokio::task::spawn_blocking(move || {
+                // pnet io is synchronous, must be spawned with blocking
+                log::info!("[{:?}] receiving task started", prober.phase);
+
+                let mut iter = pnet::transport::ipv4_packet_iter(&mut receiver);
+
+                loop {
+                    match iter.next() {
+                        Ok((ip_packet, _addr)) => match prober.parse(ip_packet.packet(), false) {
+                            Ok(result) => {
+                                log::info!("[{:?}] RECV: {:?}", prober.phase, result);
+                                let _ = recv_tx.send(result);
+                                recv_packets.fetch_add(1, SeqCst);
+                            }
+                            Err(e) => {
+                                log::warn!("error occurred while parsing: {}", e);
+                            }
+                        },
+                        Err(_) => {
+                            break;
+                        }
+                    }
+                }
+
+                log::info!("[{:?}] receiving task stopped", prober.phase);
+            });
+
+            tokio::spawn(async move {
+                let poll_timeout = Duration::from_millis(200);
+                loop {
+                    if stopped.load(SeqCst) {
+                        log::warn!("Windows: try closing socket");
+                        unsafe {
+                            pnet_sys::close(fd);
+                        }
+                        break;
+                    }
+                    tokio::time::sleep(poll_timeout).await;
+                }
+            });
+        }
 
         Ok(())
     }
