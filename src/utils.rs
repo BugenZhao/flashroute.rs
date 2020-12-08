@@ -83,3 +83,14 @@ pub async fn process_topo(topo: TopoGraph) -> Result<()> {
 
     Ok(())
 }
+
+pub fn ensure_su() {
+    if sudo::check() == sudo::RunningAs::User {
+        log::warn!(
+            "Listening on ICMP socket requires superuser permission. \
+             {} will restart with sudo.",
+            env!("CARGO_PKG_NAME")
+        );
+        sudo::escalate_if_needed().unwrap();
+    }
+}

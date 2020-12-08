@@ -34,6 +34,9 @@ async fn main() -> Result<()> {
         .parse_default_env()
         .init();
 
+    #[cfg(unix)]
+    utils::ensure_su();
+
     log::debug!("{:#?}", *OPT);
 
     let tr = Arc::new(Tracerouter::new()?);
@@ -48,6 +51,6 @@ async fn main() -> Result<()> {
 
     #[cfg(windows)]
     std::process::exit(0);
-  
+
     Ok(())
 }
