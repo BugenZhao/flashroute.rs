@@ -14,8 +14,14 @@ use tokio::sync::{mpsc, oneshot};
 use Ordering::SeqCst;
 
 use crate::{
-    dcb::DstCtrlBlock, error::*, network::NetworkManager, prober::ProbePhase, prober::ProbeResult,
-    prober::Prober, OPT,
+    dcb::DstCtrlBlock,
+    error::*,
+    network::NetworkManager,
+    prober::ProbePhase,
+    prober::ProbeResult,
+    prober::Prober,
+    topo::{Topo, TopoGraph, TopoReq},
+    OPT,
 };
 
 type MpscTx<T> = mpsc::UnboundedSender<T>;
@@ -84,16 +90,18 @@ impl Tracerouter {
 }
 
 impl Tracerouter {
-    pub async fn run(&self) -> Result<()> {
-        self.start_preprobing_task().await?;
-        self.start_probing_task().await?;
-
-        self.stop();
-        Ok(())
+    pub async fn run(&self) -> Result<TopoGraph> {
+        let _ = self.run_preprobing_task().await?;
+        let topo = self.run_probing_task().await?;
+        self.summary();
+        Ok(topo)
     }
 
     pub fn stop(&self) {
         self.stopped.store(true, SeqCst);
+    }
+
+    pub fn summary(&self) {
         log::info!(
             "sent preprobes: {:?}, sent probes: {:?}, received responses: {:?}",
             self.sent_preprobes,
@@ -108,7 +116,7 @@ impl Tracerouter {
 }
 
 impl Tracerouter {
-    async fn start_preprobing_task(&self) -> Result<()> {
+    async fn run_preprobing_task(&self) -> Result<()> {
         let prober = Prober::new(ProbePhase::Pre, true);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
         let mut nm = NetworkManager::new(prober, recv_tx)?;
@@ -176,7 +184,7 @@ impl Tracerouter {
 }
 
 impl Tracerouter {
-    async fn start_probing_task(&self) -> Result<()> {
+    async fn run_probing_task(&self) -> Result<TopoGraph> {
         let prober = Prober::new(ProbePhase::Main, true);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
         let mut nm = NetworkManager::new(prober, recv_tx)?;
@@ -186,13 +194,20 @@ impl Tracerouter {
         let mut backward_stop_set = HashSet::<Ipv4Addr>::new();
         let mut forward_discovery_set = HashSet::<Ipv4Addr>::new();
 
+        let (topo_tx, topo_rx) = mpsc::unbounded_channel();
+        let cb_topo_tx = topo_tx.clone();
+
+        let topo_task = tokio::spawn(async move { Topo::new(topo_rx).run() });
+
         tokio::spawn(async move {
             loop {
                 tokio::select! {
                     Some(result) = recv_rx.recv() => {
-                        Self::probing_callback(&targets, &mut backward_stop_set, &mut forward_discovery_set, result);
+                        Self::probing_callback(&targets, &mut backward_stop_set, &mut forward_discovery_set, &result);
+                        let _ = cb_topo_tx.send(TopoReq::Result(result));
                     }
                     _ = &mut stop_rx => {
+                        let _ = cb_topo_tx.send(TopoReq::Stop);
                         return;
                     }
                 };
@@ -217,6 +232,7 @@ impl Tracerouter {
                 match (dcb.pull_forward_task(), dcb.pull_backward_task()) {
                     (None, None) => {
                         log::debug!("{} is done!", dcb.addr);
+                        let _ = topo_tx.send(TopoReq::Complete(dcb.addr));
                         continue;
                     }
                     (None, Some(t2)) => {
@@ -242,6 +258,7 @@ impl Tracerouter {
             last_seen = SystemTime::now();
         }
         // WORKER END
+
         if !self.stopped() {
             log::info!("[Main] Waiting...");
             tokio::time::sleep(Duration::from_secs(5)).await;
@@ -252,14 +269,14 @@ impl Tracerouter {
         self.sent_probes.fetch_add(nm.sent_packets(), SeqCst);
         self.recv_responses.fetch_add(nm.recv_packets(), SeqCst);
 
-        Ok(())
+        Ok(topo_task.await.unwrap().await)
     }
 
     fn probing_callback(
         targets: &DcbMap,
         backward_stop_set: &mut HashSet<Ipv4Addr>,
         forward_discovery_set: &mut HashSet<Ipv4Addr>,
-        result: ProbeResult,
+        result: &ProbeResult,
     ) {
         log::debug!("[Main] CALLBACK: {}", result.destination);
 
