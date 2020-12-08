@@ -45,7 +45,6 @@ async fn main() -> Result<()> {
 
     let topo = tr.run().await?;
     process_topo(topo).await?;
-    tr.summary();
 
     Ok(())
 }

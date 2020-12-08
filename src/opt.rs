@@ -28,8 +28,6 @@ pub struct Opt {
     pub interface: pnet::datalink::NetworkInterface,
     #[structopt(long, default_value = "33434")]
     pub dst_port: u16,
-    #[structopt(long, default_value = "53")]
-    pub src_port: u16,
     #[structopt(long, default_value = "How are you?")]
     pub payload_message: String,
 
