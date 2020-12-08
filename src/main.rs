@@ -46,5 +46,8 @@ async fn main() -> Result<()> {
     let topo = tr.run().await?;
     process_topo(topo).await?;
 
+    #[cfg(windows)]
+    std::process::exit(0);
+  
     Ok(())
 }

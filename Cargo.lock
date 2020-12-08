@@ -109,6 +109,7 @@ dependencies = [
  "log 0.4.11",
  "petgraph",
  "pnet",
+ "pnet_sys",
  "rand",
  "structopt",
  "thiserror",
