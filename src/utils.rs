@@ -48,16 +48,26 @@ pub fn ip_checksum(addr: Ipv4Addr, salt: u16) -> u16 {
 }
 
 pub async fn process_topo(topo: TopoGraph) -> Result<()> {
-    let dot = Dot::new(&topo);
-    log::debug!("{}", dot);
+    let dot_content = Dot::with_config(&topo, &[petgraph::dot::Config::GraphContentOnly]);
+    log::debug!("{}", dot_content);
 
     let dot_path = OPT.output_dot.to_str().unwrap();
     let viz_path = OPT.output_viz.to_str().unwrap();
-
     let mut dot_file = tokio::fs::File::create(dot_path).await?;
-    dot_file.write_all(format!("{}", dot).as_bytes()).await?;
+
+    for s in [
+        "graph {\n    overlap = false; splines = true;\n",
+        format!("{}", dot_content).as_str(),
+        "}\n",
+    ]
+    .iter()
+    {
+        dot_file.write(s.as_bytes()).await?;
+    }
 
     tokio::process::Command::new("dot")
+        .arg("-K")
+        .arg("neato")
         .arg("-Tpng")
         .arg(dot_path)
         .arg("-o")
