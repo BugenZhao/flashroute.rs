@@ -32,13 +32,13 @@ pub struct Opt {
     pub payload_message: String,
 
     // Output
-    #[structopt(short = "op", long = "no-plot", parse(from_flag = std::ops::Not::not))]
+    #[structopt(long = "no-plot", parse(from_flag = std::ops::Not::not))]
     pub plot: bool,
     #[structopt(long, default_value = "neato")]
     pub layout: String,
-    #[structopt(short = "od", long, default_value = "fr.dot")]
+    #[structopt(short = "o", long, default_value = "fr.dot")]
     pub output_dot: PathBuf,
-    #[structopt(short = "ov", long, default_value = "fr.png")]
+    #[structopt(short = "O", long, default_value = "fr.png")]
     pub output_viz: PathBuf,
 
     // Misc
