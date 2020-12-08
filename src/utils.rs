@@ -24,7 +24,7 @@ pub fn get_interface(name: &str) -> Result<NetworkInterface> {
     if name.is_empty() {
         interfaces
             .into_iter()
-            .filter(|ni| ni.is_up() && !ni.is_loopback() && !ni.ips.is_empty())
+            .filter(|ni| ni.is_up() && !ni.is_loopback() && get_interface_ipv4_addr(ni).is_some())
             .next()
             .ok_or(Error::NoSuchInterface(name.to_owned()))
     } else {
@@ -68,16 +68,18 @@ pub async fn process_topo(topo: TopoGraph) -> Result<()> {
     }
     write!("}\n");
 
-    tokio::process::Command::new("dot")
-        .arg("-K")
-        .arg("neato")
-        .arg("-Tpng")
-        .arg(dot_path)
-        .arg("-o")
-        .arg(viz_path)
-        .spawn()?
-        .wait()
-        .await?;
+    if OPT.plot {
+        tokio::process::Command::new("dot")
+            .arg("-K")
+            .arg(OPT.layout.as_str())
+            .arg("-Tpng")
+            .arg(dot_path)
+            .arg("-o")
+            .arg(viz_path)
+            .spawn()?
+            .wait()
+            .await?;
+    }
 
     Ok(())
 }

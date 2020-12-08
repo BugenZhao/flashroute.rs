@@ -32,11 +32,13 @@ pub struct Opt {
     pub payload_message: String,
 
     // Output
-    #[structopt(short, long, default_value = "fr.out")]
-    pub output: PathBuf,
-    #[structopt(long, default_value = "fr.dot")]
+    #[structopt(short = "op", long = "no-plot", parse(from_flag = std::ops::Not::not))]
+    pub plot: bool,
+    #[structopt(long, default_value = "neato")]
+    pub layout: String,
+    #[structopt(short = "od", long, default_value = "fr.dot")]
     pub output_dot: PathBuf,
-    #[structopt(long, default_value = "fr.png")]
+    #[structopt(short = "ov", long, default_value = "fr.png")]
     pub output_viz: PathBuf,
 
     // Misc
@@ -46,9 +48,9 @@ pub struct Opt {
     pub salt: u16,
 
     // Target
-    #[structopt(default_value = "115.159.0.0/16")]
+    #[structopt()]
     pub target: ipnet::Ipv4Net,
-    #[structopt(long, default_value = "8")]
+    #[structopt(short, long, default_value = "8")]
     pub grain: u8,
 
     // Generated
