@@ -216,7 +216,7 @@ impl Tracerouter {
                 let dcb = self.targets.get(&key).unwrap();
                 match (dcb.pull_forward_task(), dcb.pull_backward_task()) {
                     (None, None) => {
-                        log::warn!("{} has no tasks!", dcb.addr);
+                        log::debug!("{} is done!", dcb.addr);
                         continue;
                     }
                     (None, Some(t2)) => {
@@ -235,8 +235,9 @@ impl Tracerouter {
             keys = new_keys;
 
             let duration = SystemTime::now().duration_since(last_seen).unwrap();
-            if duration < one_sec {
-                tokio::time::sleep(one_sec - duration).await;
+            let min_round_duration = one_sec.min(Duration::from_millis(keys.len() as u64 * 20));
+            if duration < min_round_duration {
+                tokio::time::sleep(min_round_duration - duration).await;
             }
             last_seen = SystemTime::now();
         }
@@ -266,7 +267,7 @@ impl Tracerouter {
         if let Some(dcb) = targets.get(&key) {
             if !result.from_destination {
                 // hosts on the path
-                if result.distance > dcb.initial_ttl.load(SeqCst) {
+                if result.distance > dcb.initial_ttl() {
                     // o-o-o-S-o-X-o-D
                     forward_discovery_set.insert(result.responder);
                     if result.distance <= dcb.last_forward_task() {
@@ -277,6 +278,7 @@ impl Tracerouter {
                     // o-X-o-S-o-o-o-D
                     let new = backward_stop_set.insert(result.responder);
                     if !new {
+                        log::debug!("STOP for {}", dcb.addr);
                         dcb.stop_backward();
                     }
                 }

@@ -8,11 +8,11 @@ use Ordering::SeqCst;
 #[derive(Debug)]
 pub struct DstCtrlBlock {
     pub addr: Ipv4Addr,
-    pub initial_ttl: AtomicU8,
-    pub accurate_distance: AtomicBool,
-    pub next_backward_hop: AtomicU8,
-    pub next_forward_hop: AtomicU8,
-    pub forward_horizon: AtomicU8,
+    initial_ttl: AtomicU8,
+    accurate_distance: AtomicBool,
+    next_backward_hop: AtomicU8,
+    next_forward_hop: AtomicU8,
+    forward_horizon: AtomicU8,
 }
 
 impl DstCtrlBlock {
@@ -41,6 +41,10 @@ impl DstCtrlBlock {
 }
 
 impl DstCtrlBlock {
+    pub fn initial_ttl(&self) -> u8 {
+        self.initial_ttl.load(SeqCst)
+    }
+
     pub fn pull_backward_task(&self) -> Option<u8> {
         let result = self.next_backward_hop.fetch_update(SeqCst, SeqCst, |x| {
             if x > 0 {
