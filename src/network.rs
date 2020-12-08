@@ -81,7 +81,6 @@ impl NetworkManager {
         let protocol = Layer3(Udp);
         let (mut sender, _) = transport_channel(0, protocol)?;
         let local_ip = OPT.local_addr;
-        let _dummy_addr = IpAddr::V4("0.0.0.0".parse().unwrap());
 
         tokio::spawn(async move {
             log::info!("[{:?}] sending task started", prober.phase);
