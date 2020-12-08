@@ -6,8 +6,8 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     #[error("cannot find interface `{0}`")]
     NoSuchInterface(String),
-    #[error("parse error")]
-    ParseError,
+    #[error("parse error at stage {0}")]
+    ParseError(u8),
     #[error("unexpected icmp packet with source port `{0}`, expected `{1}`")]
     UnexpectedIcmpSrcPort(u16, u16),
     #[error("invalid distance with initial_ttl `{0}` and dst_ttl `{1}`")]

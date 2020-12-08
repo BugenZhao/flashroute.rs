@@ -89,12 +89,18 @@ impl Prober {
     }
 
     pub fn parse(&self, packet: &[u8], ignore_port: bool) -> Result<ProbeResult> {
-        let ip_packet = Ipv4Packet::new(packet).ok_or(Error::ParseError)?;
-        let icmp_packet = IcmpPacket::new(ip_packet.payload()).ok_or(Error::ParseError)?;
-        let res_ip_packet =
-            Ipv4Packet::new(&ip_packet.payload()[Self::ICMP_HEADER_LENGTH as usize..])
-                .ok_or(Error::ParseError)?;
-        let res_udp_packet = UdpPacket::new(res_ip_packet.payload()).ok_or(Error::ParseError)?;
+        // currently there's a bug in pnet, that ip total length has incorrect endianness on apple devices
+        // thus, we can't...
+        //  - construct res_ip_packet from ip_packet.payload()[ICMP_HDR_LEN..]
+        //  - directly decode timestamp from res_ip_packet.get_total_length()
+
+        let ip_packet = Ipv4Packet::new(packet).ok_or(Error::ParseError(1))?;
+        let icmp_packet = IcmpPacket::new(ip_packet.payload()).ok_or(Error::ParseError(2))?;
+        let res_ip_packet = Ipv4Packet::new(
+            &ip_packet.packet()[(Self::IPV4_HEADER_LENGTH + Self::ICMP_HEADER_LENGTH) as usize..],
+        )
+        .ok_or(Error::ParseError(3))?;
+        let res_udp_packet = UdpPacket::new(res_ip_packet.payload()).ok_or(Error::ParseError(4))?;
 
         let destination = res_ip_packet.get_destination();
         let src_port = res_udp_packet.get_source();
@@ -103,10 +109,10 @@ impl Prober {
             return Err(Error::UnexpectedIcmpSrcPort(src_port, expected_src_port));
         }
 
-        // log::info!("{:#?}", ip_packet);
-        // log::info!("{:#?}", icmp_packet);
-        // log::info!("{:#?}", res_ip_packet);
-        // log::info!("{:#?}", res_udp_packet);
+        // log::debug!("{:#?}", ip_packet);
+        // log::debug!("{:#?}", icmp_packet);
+        // log::debug!("{:#?}", res_ip_packet);
+        // log::debug!("{:#?}", res_udp_packet);
 
         let initial_ttl = {
             let ttl = res_ip_packet.get_identification() & 0x1f;
@@ -134,13 +140,18 @@ impl Prober {
             }
         };
 
-        // TODO: extract more data for debug use
-
         let rtt = if self.encode_timestamp {
-            let send = (((res_ip_packet.get_identification() >> 6) & 0x3FF)
-                | (((res_ip_packet.get_total_length() >> 1) & 0x3F) << 10))
-                as u32;
+            let send = if cfg!(target_vendor = "apple") {
+                // byte order fix
+                ((res_ip_packet.get_identification() >> 6) & 0x3FF)
+                    | (((res_ip_packet.get_total_length().to_be() >> 1) & 0x3F) << 10)
+            } else {
+                ((res_ip_packet.get_identification() >> 6) & 0x3FF)
+                    | (((res_ip_packet.get_total_length() >> 1) & 0x3F) << 10)
+            } as u32;
             let recv = crate::utils::timestamp_ms_u16() as u32;
+            log::debug!("send: 0x{:x}, recv: 0x{:x}", send, recv);
+
             if recv >= send {
                 recv - send
             } else {
