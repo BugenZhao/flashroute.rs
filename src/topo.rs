@@ -34,18 +34,24 @@ impl Topo {
     }
 
     pub async fn run(mut self) -> TopoGraph {
-        let dummy = [ProbeResult {
+        let local = ProbeResult {
             destination: OPT.local_addr,
             responder: OPT.local_addr,
             distance: 0,
             from_destination: true,
             debug: ProbeDebugResult::default(),
-        }];
+        };
 
         let process = |mut results: Vec<ProbeResult>, graph: &mut TopoGraph| {
             results.sort_by_key(|r| r.distance);
-            let it = dummy.iter().chain(results.iter());
-            for (a, b) in it.clone().zip(it.skip(1)) {
+            if let Some(first) = results.first() {
+                let dist = first.distance;
+                if dist <= 2 {
+                    graph.add_node(first.responder);
+                    graph.add_edge(local.responder, first.responder, dist);
+                }
+            }
+            for (a, b) in results.iter().zip(results.iter().skip(1)) {
                 let dist = b.distance - a.distance;
                 if dist > 8 {
                     continue;
