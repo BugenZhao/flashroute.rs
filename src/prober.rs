@@ -4,7 +4,9 @@ use pnet::packet::{icmp::*, ip::IpNextHeaderProtocols, ipv4::*, udp::*, Packet};
 use std::net::Ipv4Addr;
 
 #[derive(Default, Debug)]
-pub struct ProbeDebugResult {}
+pub struct ProbeDebugResult {
+    pub rtt: u16,
+}
 
 #[derive(Debug)]
 pub struct ProbeResult {
@@ -134,12 +136,26 @@ impl Prober {
 
         // TODO: extract more data for debug use
 
+        let rtt = if self.encode_timestamp {
+            let send = (((res_ip_packet.get_identification() >> 6) & 0x3FF)
+                | (((res_ip_packet.get_total_length() >> 1) & 0x3F) << 10))
+                as u32;
+            let recv = crate::utils::timestamp_ms_u16() as u32;
+            if recv >= send {
+                recv - send
+            } else {
+                recv + u16::MAX as u32 - send
+            }
+        } else {
+            0
+        } as u16;
+
         let result = ProbeResult {
             destination,
             responder: ip_packet.get_source(),
             distance,
             from_destination,
-            debug: ProbeDebugResult {},
+            debug: ProbeDebugResult { rtt },
         };
 
         Ok(result)
