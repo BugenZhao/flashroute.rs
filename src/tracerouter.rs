@@ -232,7 +232,6 @@ impl Tracerouter {
                 match (dcb.pull_forward_task(), dcb.pull_backward_task()) {
                     (None, None) => {
                         log::debug!("{} is done!", dcb.addr);
-                        let _ = topo_tx.send(TopoReq::Complete(dcb.addr));
                         continue;
                     }
                     (None, Some(t2)) => {

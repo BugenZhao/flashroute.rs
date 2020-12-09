@@ -13,6 +13,7 @@ pub struct DstCtrlBlock {
     next_backward_hop: AtomicU8,
     next_forward_hop: AtomicU8,
     forward_horizon: AtomicU8,
+    backward_count: AtomicU8,
 }
 
 impl DstCtrlBlock {
@@ -24,6 +25,7 @@ impl DstCtrlBlock {
             next_backward_hop: AtomicU8::new(initial_ttl),
             next_forward_hop: AtomicU8::new(initial_ttl + 1),
             forward_horizon: AtomicU8::new(initial_ttl),
+            backward_count: AtomicU8::new(0),
         }
     }
 
@@ -53,6 +55,7 @@ impl DstCtrlBlock {
                 None
             }
         });
+        self.backward_count.fetch_add(1, SeqCst);
         result.ok()
     }
 
@@ -84,8 +87,10 @@ impl DstCtrlBlock {
         self.forward_horizon.fetch_max(new_horizon, SeqCst);
     }
 
-    pub fn stop_backward(&self) -> u8 {
-        self.next_backward_hop.fetch_min(0, SeqCst)
+    pub fn stop_backward(&self) {
+        if self.backward_count.load(SeqCst) >= 2 {
+            self.next_backward_hop.fetch_min(0, SeqCst);
+        }
     }
 
     pub fn stop_forward(&self) {

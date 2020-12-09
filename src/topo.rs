@@ -12,7 +12,6 @@ pub type TopoGraph = UnGraphMap<Ipv4Addr, u8>;
 
 pub enum TopoReq {
     Result(ProbeResult),
-    Complete(Ipv4Addr),
     Stop,
 }
 
@@ -46,7 +45,7 @@ impl Topo {
             results.sort_by_key(|r| r.distance);
             if let Some(first) = results.first() {
                 let dist = first.distance;
-                if dist <= 5 {
+                if dist <= 1 {
                     graph.add_node(first.responder);
                     graph.add_edge(local.responder, first.responder, dist);
                 }
@@ -66,13 +65,8 @@ impl Topo {
                         .or_insert(Vec::new())
                         .push(result);
                 }
-                TopoReq::Complete(addr) => {
-                    if let Some(results) = self.results_buf.remove(&addr) {
-                        process(results, &mut self.graph);
-                    }
-                }
                 TopoReq::Stop => {
-                    for (_, results) in self.results_buf.drain() {
+                    for (_, results) in self.results_buf {
                         process(results, &mut self.graph);
                     }
                     break;
