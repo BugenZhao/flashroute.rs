@@ -5,12 +5,12 @@ A reproduction of [paper](https://dl.acm.org/doi/10.1145/3419394.3423619) "*Flas
 ## FlashRoute
 > FlashRoute is a tool to discover network topology, which is specially optimized for full Internet topology discovery. 
 > It has high time efficiency in which it can finish the scan over the full IPv4 /24 address space in 7 minutes at probing speed of 200 Kpps, and 17 mins at probing speed of 100 Kpps.
-> It also has high network efficiency, in which it can finishes the scan using only 75% of probes used by Scamper and 30% of probes used by Yarrp  to finish the same task.
+> It also has high network efficiency, in which it can finish the scan using only 75% of probes used by Scamper and 30% of probes used by Yarrp  to finish the same task.
 
-More introduction for FlashRoute can be found in both the [paper](https://dl.acm.org/doi/10.1145/3419394.3423619) and the [repository](https://github.com/lambdahuang/FlashRoute).
+More introductions for FlashRoute can be found in both the [paper](https://dl.acm.org/doi/10.1145/3419394.3423619) and the [repository](https://github.com/lambdahuang/FlashRoute).
 
 ## Reproduction in Rust
-The original FlashRoute is written in C++14 with boost and adsl libraries, which works well but may still be not modern, concise, or safe enough.
+The original FlashRoute is written in C++14 with Boost and Abseil libraries, which works well but may still be not modern, concise, or safe enough.
 We reimplement FlashRoute in Rust, a modern system programming language, and name it as *flashroute.rs*.
 
 Compared to the original implementation, the main features of *flashroute.rs* are:
@@ -41,7 +41,7 @@ Compared to the original implementation, the main features of *flashroute.rs* ar
 
 Listening on ICMP socket requires superuser permission, the *flashroute.rs* may automatically restart in sudo mode.
 
-Windows users may be required to install pcap library to make it built. Also, *flashroute.rs* has not been tested on Windows yet.
+Windows users may be required to install pcap library to make it built. However, *flashroute.rs* has not been tested on Windows yet.
 
 ## References
 1. Yuchen Huang, Michael Rabinovich, and Rami Al-Dalky. 2020. FlashRoute: Efficient Traceroute on a Massive Scale. In ACM Internet Measurement Conference (IMC ’20), October 27–29, 2020, Virtual Event, USA. ACM, New York, NY, USA, 13 pages. https://doi.org/10.1145/3419394.3423619
