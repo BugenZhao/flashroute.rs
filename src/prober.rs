@@ -109,10 +109,10 @@ impl Prober {
             return Err(Error::UnexpectedIcmpSrcPort(src_port, expected_src_port));
         }
 
-        // log::debug!("{:#?}", ip_packet);
-        // log::debug!("{:#?}", icmp_packet);
-        // log::debug!("{:#?}", res_ip_packet);
-        // log::debug!("{:#?}", res_udp_packet);
+        // log::trace!("{:#?}", ip_packet);
+        // log::trace!("{:#?}", icmp_packet);
+        // log::trace!("{:#?}", res_ip_packet);
+        // log::trace!("{:#?}", res_udp_packet);
 
         let initial_ttl = {
             let ttl = res_ip_packet.get_identification() & 0x1f;
@@ -150,7 +150,7 @@ impl Prober {
                     | (((res_ip_packet.get_total_length() >> 1) & 0x3F) << 10)
             } as u32;
             let recv = crate::utils::timestamp_ms_u16() as u32;
-            log::debug!("send: 0x{:x}, recv: 0x{:x}", send, recv);
+            log::trace!("send: 0x{:x}, recv: 0x{:x}", send, recv);
 
             if recv >= send {
                 recv - send

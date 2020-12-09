@@ -49,7 +49,6 @@ pub fn ip_checksum(addr: Ipv4Addr, salt: u16) -> u16 {
 
 pub async fn process_topo(topo: TopoGraph) -> Result<()> {
     let dot_content = Dot::with_config(&topo, &[petgraph::dot::Config::GraphContentOnly]);
-    log::debug!("{}", dot_content);
 
     let dot_path = OPT.output_dot.to_str().unwrap();
     let viz_path = OPT.output_viz.to_str().unwrap();

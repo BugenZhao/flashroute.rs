@@ -50,6 +50,8 @@ pub struct Opt {
     pub salt: u16,
     #[structopt(long)]
     pub dry_run: bool,
+    #[structopt(short = "D", long)]
+    pub debug: bool,
 
     // Target
     #[structopt(short, long, default_value = "8")]

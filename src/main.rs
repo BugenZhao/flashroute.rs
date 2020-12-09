@@ -30,18 +30,20 @@ lazy_static! {
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::builder()
-        .filter_level(log::LevelFilter::Info)
+        .filter_level(if OPT.debug {
+            log::LevelFilter::Debug
+        } else {
+            log::LevelFilter::Info
+        })
         .parse_default_env()
         .init();
 
     #[cfg(unix)]
     utils::ensure_su();
 
-    log::debug!("{:#?}", *OPT);
-
     #[cfg(debug_assertions)]
     log::warn!(
-        "{} is running under DEBUG mode, which may perform quite poorly.",
+        "{} is built in DEBUG mode, thus may perform quite poorly.",
         env!("CARGO_PKG_NAME")
     );
 

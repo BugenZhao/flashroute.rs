@@ -114,7 +114,7 @@ impl NetworkManager {
                             let _ = sender.send_to(packet, IpAddr::V4(dst_unit.0));
                         }
 
-                        log::debug!("PROBE: {:?}", dst_unit);
+                        log::trace!("PROBE: {:?}", dst_unit);
 
                         sent_packets.fetch_add(1, SeqCst);
                         sent_this_sec += 1;
@@ -153,12 +153,15 @@ impl NetworkManager {
                 if let Ok(Some((ip_packet, _addr))) = iter.next_with_timeout(io_timeout) {
                     match prober.parse(ip_packet.packet(), false) {
                         Ok(result) => {
-                            log::info!("[{:?}] RECV: {:?}", prober.phase, result);
+                            log::debug!("[{:?}] RECV: {:?}", prober.phase, result);
                             let _ = recv_tx.send(result);
                             recv_packets.fetch_add(1, SeqCst);
                         }
-                        Err(e) => {
+                        Err(e @ Error::ParseError(_)) => {
                             log::warn!("error occurred while parsing: {}", e);
+                        }
+                        Err(e) => {
+                            log::debug!("error occurred while parsing: {}", e);
                         }
                     }
                 }
@@ -181,12 +184,15 @@ impl NetworkManager {
                     match iter.next() {
                         Ok((ip_packet, _addr)) => match prober.parse(ip_packet.packet(), false) {
                             Ok(result) => {
-                                log::info!("[{:?}] RECV: {:?}", prober.phase, result);
+                                log::debug!("[{:?}] RECV: {:?}", prober.phase, result);
                                 let _ = recv_tx.send(result);
                                 recv_packets.fetch_add(1, SeqCst);
                             }
-                            Err(e) => {
+                            Err(e @ Error::ParseError(_)) => {
                                 log::warn!("error occurred while parsing: {}", e);
+                            }
+                            Err(e) => {
+                                log::debug!("error occurred while parsing: {}", e);
                             }
                         },
                         Err(_) => {
@@ -219,7 +225,7 @@ impl NetworkManager {
     pub fn schedule_probe(&self, unit: ProbeUnit) {
         match self.send_tx.send(unit) {
             Ok(_) => {
-                log::debug!("SCHEDULE: {:?}", unit);
+                log::trace!("SCHEDULE: {:?}", unit);
             }
             Err(e) => {
                 log::error!("{:?}", e);

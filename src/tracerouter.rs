@@ -174,7 +174,7 @@ impl Tracerouter {
         if !result.from_destination {
             return;
         }
-        log::debug!("[Pre] CALLBACK: {}", result.destination);
+        log::trace!("[Pre] CALLBACK: {}", result.destination);
 
         let key = Self::addr_to_key(result.destination);
         if let Some(dcb) = targets.get(&key) {
@@ -231,11 +231,15 @@ impl Tracerouter {
         let mut last_seen = SystemTime::now();
         let one_sec = Duration::from_secs(1);
 
+        let mut round = 0usize;
         while !keys.is_empty() {
-            let mut new_keys = Vec::new();
-            new_keys.reserve(keys.len());
+            round += 1;
 
-            log::debug!("[Main] loop");
+            let mut new_keys = Vec::new();
+            let total_count = keys.len();
+            new_keys.reserve(total_count);
+
+            log::trace!("[Main] loop");
             for key in keys {
                 if self.stopped() {
                     break;
@@ -243,7 +247,7 @@ impl Tracerouter {
                 let dcb = self.targets.get(&key).unwrap();
                 match (dcb.pull_forward_task(), dcb.pull_backward_task()) {
                     (None, None) => {
-                        log::debug!("{} is done!", dcb.addr);
+                        log::trace!("{} is done!", dcb.addr);
                         continue;
                     }
                     (None, Some(t2)) => {
@@ -267,6 +271,15 @@ impl Tracerouter {
                 tokio::time::sleep(min_round_duration - duration).await;
             }
             last_seen = SystemTime::now();
+
+            let remain_count = keys.len();
+            log::info!(
+                "round {:3}: total {:8}, complete {:8}, remain {:8}",
+                round,
+                total_count,
+                total_count - remain_count,
+                remain_count
+            );
         }
         // WORKER END
 
@@ -289,7 +302,7 @@ impl Tracerouter {
         forward_discovery_set: &mut HashSet<Ipv4Addr>,
         result: &ProbeResult,
     ) {
-        log::debug!("[Main] CALLBACK: {}", result.destination);
+        log::trace!("[Main] CALLBACK: {}", result.destination);
 
         let key = Self::addr_to_key(result.destination);
         if let Some(dcb) = targets.get(&key) {
@@ -306,7 +319,7 @@ impl Tracerouter {
                     // o-X-o-S-o-o-o-D
                     let new = backward_stop_set.insert(result.responder);
                     if !new {
-                        log::debug!("STOP for {}", dcb.addr);
+                        log::trace!("STOP for {}", dcb.addr);
                         dcb.stop_backward();
                     }
                 }
