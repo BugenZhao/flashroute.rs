@@ -48,6 +48,8 @@ pub struct Opt {
     pub seed: u64,
     #[structopt(long, default_value = "0")]
     pub salt: u16,
+    #[structopt(long)]
+    pub dry_run: bool,
 
     // Target
     #[structopt(short, long, default_value = "8")]

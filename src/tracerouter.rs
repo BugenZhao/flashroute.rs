@@ -1,5 +1,4 @@
 use std::{
-    collections::{HashMap, HashSet},
     net::Ipv4Addr,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
@@ -8,6 +7,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+use hashbrown::{hash_map::HashMap, hash_set::HashSet};
 use ipnet::IpAdd;
 use rand::{rngs::StdRng, Rng, SeedableRng};
 use tokio::sync::{mpsc, oneshot};
@@ -51,8 +51,7 @@ impl Tracerouter {
 
         log::info!("Generating targets...");
         let all_count = Self::targets_count();
-        let mut targets = DcbMap::new();
-        targets.reserve(all_count);
+        let mut targets = DcbMap::with_capacity(all_count);
         for addr in Self::random_targets() {
             targets.insert(
                 Self::addr_to_key(addr),
@@ -237,7 +236,7 @@ impl Tracerouter {
             new_keys.reserve(keys.len());
 
             log::debug!("[Main] loop");
-            for key in keys.into_iter() {
+            for key in keys {
                 if self.stopped() {
                     break;
                 }

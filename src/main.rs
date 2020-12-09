@@ -39,6 +39,12 @@ async fn main() -> Result<()> {
 
     log::debug!("{:#?}", *OPT);
 
+    #[cfg(debug_assertions)]
+    log::warn!(
+        "{} is running under DEBUG mode, which may perform quite poorly.",
+        env!("CARGO_PKG_NAME")
+    );
+
     let tr = Arc::new(Tracerouter::new()?);
     let r = tr.clone();
     tokio::spawn(async move {

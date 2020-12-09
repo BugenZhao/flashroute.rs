@@ -97,18 +97,22 @@ impl NetworkManager {
                     }
                     Some(dst_unit) = rx.recv() => {
                         // Probing rate control
-                        let now = SystemTime::now();
-                        let time_elapsed = now.duration_since(last_seen).unwrap();
-                        if time_elapsed >= one_sec {
-                            sent_this_sec = 0;
-                            last_seen = now;
-                        }
-                        if sent_this_sec > (*OPT).probing_rate {
-                            tokio::time::sleep(one_sec - time_elapsed).await;
+                        if sent_this_sec % 128 == 0 {
+                            let now = SystemTime::now();
+                            let time_elapsed = now.duration_since(last_seen).unwrap();
+                            if time_elapsed >= one_sec {
+                                sent_this_sec = 0;
+                                last_seen = now;
+                            }
+                            if sent_this_sec > OPT.probing_rate {
+                                tokio::time::sleep(one_sec - time_elapsed).await;
+                            }
                         }
 
                         let packet = prober.pack(dst_unit, local_ip);
-                        let _ = sender.send_to(packet, IpAddr::V4(dst_unit.0));
+                        if !OPT.dry_run {
+                            let _ = sender.send_to(packet, IpAddr::V4(dst_unit.0));
+                        }
 
                         log::debug!("PROBE: {:?}", dst_unit);
 
