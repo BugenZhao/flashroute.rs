@@ -21,6 +21,7 @@ use crate::{
     prober::ProbeResult,
     prober::Prober,
     topo::{Topo, TopoGraph, TopoReq},
+    utils::GlobalIpv4Ext,
     OPT,
 };
 
@@ -48,14 +49,22 @@ impl Tracerouter {
             return Err(Error::BadGrainOrNet(OPT.grain, OPT.targets));
         }
 
+        log::info!("Generating targets...");
+        let all_count = Self::targets_count();
         let mut targets = DcbMap::new();
-        targets.reserve(Self::targets_count());
+        targets.reserve(all_count);
         for addr in Self::random_targets() {
             targets.insert(
                 Self::addr_to_key(addr),
                 DstCtrlBlock::new(addr, OPT.default_ttl),
             );
         }
+        let filtered_count = targets.len();
+        log::info!(
+            "Generated {} targets, {} removed",
+            filtered_count,
+            all_count - filtered_count
+        );
 
         Ok(Self {
             targets: Arc::new(targets),
@@ -79,13 +88,17 @@ impl Tracerouter {
             .subnets(OPT.targets.max_prefix_len() - OPT.grain)
             .unwrap();
 
-        subnets.map(move |net| {
-            if OPT.grain == 0 {
-                net.addr()
-            } else {
-                net.addr().saturating_add(rng.gen_range(1, 1 << OPT.grain))
-            }
-        })
+        subnets
+            .map(move |net| net.addr().saturating_add(rng.gen_range(0, 1 << OPT.grain)))
+            .filter(|addr| {
+                if OPT.global_only && OPT.allow_private {
+                    addr.is_bz_global() || addr.is_private()
+                } else if OPT.global_only {
+                    addr.is_bz_global()
+                } else {
+                    true
+                }
+            })
     }
 }
 
@@ -103,7 +116,7 @@ impl Tracerouter {
 
     pub fn summary(&self) {
         log::info!(
-            "sent preprobes: {:?}, sent probes: {:?}, received responses: {:?}",
+            "[Summary] sent preprobes: {:?}, sent probes: {:?}, received responses: {:?}",
             self.sent_preprobes,
             self.sent_probes,
             self.recv_responses
@@ -146,7 +159,7 @@ impl Tracerouter {
         // WORKER END
 
         if !self.stopped() {
-            log::info!("[Pre] Waiting...");
+            log::info!("[Pre] Waiting for 3 secs...");
             tokio::time::sleep(Duration::from_secs(3)).await;
         }
         nm.stop();
@@ -259,7 +272,7 @@ impl Tracerouter {
         // WORKER END
 
         if !self.stopped() {
-            log::info!("[Main] Waiting...");
+            log::info!("[Main] Waiting for 5 secs...");
             tokio::time::sleep(Duration::from_secs(5)).await;
         }
         nm.stop();

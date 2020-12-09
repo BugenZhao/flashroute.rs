@@ -54,6 +54,10 @@ pub struct Opt {
     pub grain: u8,
     #[structopt()]
     pub targets: ipnet::Ipv4Net,
+    #[structopt(long)]
+    pub global_only: bool,
+    #[structopt(long)]
+    pub allow_private: bool,
 
     // Generated
     #[structopt(skip = ("0.0.0.0".parse::<std::net::Ipv4Addr>().unwrap()))]
