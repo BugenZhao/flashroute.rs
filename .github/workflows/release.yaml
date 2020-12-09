@@ -34,7 +34,7 @@ jobs:
 
       - name: Zip
         run: |
-          zip flashroute_rs_linux_amd64 ./target/release/flashroute_rs
+          zip -j flashroute_rs_linux_amd64 ./target/release/flashroute_rs
 
       - name: Create Release
         id: create_release
