@@ -1,9 +1,9 @@
 use std::{
     net::Ipv4Addr,
-    sync::atomic::{AtomicBool, AtomicU8, Ordering},
+    sync::atomic::{AtomicBool, AtomicU8, Ordering::SeqCst},
 };
 
-use Ordering::SeqCst;
+use crate::OPT;
 
 #[derive(Debug)]
 pub struct DstCtrlBlock {
@@ -88,7 +88,7 @@ impl DstCtrlBlock {
     }
 
     pub fn stop_backward(&self) {
-        if self.backward_count.load(SeqCst) >= 2 {
+        if !OPT.two || self.backward_count.load(SeqCst) >= 2 {
             self.next_backward_hop.fetch_min(0, SeqCst);
         }
     }

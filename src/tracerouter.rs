@@ -44,8 +44,8 @@ pub struct Tracerouter {
 
 impl Tracerouter {
     pub fn new() -> Result<Self> {
-        if OPT.grain > (OPT.target.max_prefix_len() - OPT.target.prefix_len()) {
-            return Err(Error::BadGrainOrNet(OPT.grain, OPT.target));
+        if OPT.grain > (OPT.targets.max_prefix_len() - OPT.targets.prefix_len()) {
+            return Err(Error::BadGrainOrNet(OPT.grain, OPT.targets));
         }
 
         let mut targets = DcbMap::new();
@@ -69,14 +69,14 @@ impl Tracerouter {
     }
 
     fn targets_count() -> usize {
-        1 << ((OPT.target.max_prefix_len() - OPT.target.prefix_len()) - OPT.grain)
+        1 << ((OPT.targets.max_prefix_len() - OPT.targets.prefix_len()) - OPT.grain)
     }
 
     fn random_targets() -> impl Iterator<Item = Ipv4Addr> {
         let mut rng = StdRng::seed_from_u64(OPT.seed);
         let subnets = OPT
-            .target
-            .subnets(OPT.target.max_prefix_len() - OPT.grain)
+            .targets
+            .subnets(OPT.targets.max_prefix_len() - OPT.grain)
             .unwrap();
 
         subnets.map(move |net| {
@@ -315,11 +315,11 @@ mod test {
         let tr = Tracerouter::new().unwrap();
         assert_eq!(
             tr.targets.len(),
-            1 << (32 - OPT.target.prefix_len() - OPT.grain)
+            1 << (32 - OPT.targets.prefix_len() - OPT.grain)
         );
         assert!(tr
             .targets
             .values()
-            .all(|dcb| OPT.target.contains(&dcb.addr)));
+            .all(|dcb| OPT.targets.contains(&dcb.addr)));
     }
 }

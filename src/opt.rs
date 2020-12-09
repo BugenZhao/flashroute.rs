@@ -22,6 +22,8 @@ pub struct Opt {
     pub gap: u8,
     #[structopt(long, default_value = "400000")]
     pub probing_rate: u64,
+    #[structopt(short = "2", help = "Send at least 2 probes to each target")]
+    pub two: bool,
 
     // Connection
     #[structopt(long, parse(try_from_str = utils::get_interface), default_value = "")]
@@ -51,7 +53,7 @@ pub struct Opt {
     #[structopt(short, long, default_value = "8")]
     pub grain: u8,
     #[structopt()]
-    pub target: ipnet::Ipv4Net,
+    pub targets: ipnet::Ipv4Net,
 
     // Generated
     #[structopt(skip = ("0.0.0.0".parse::<std::net::Ipv4Addr>().unwrap()))]
@@ -69,7 +71,7 @@ pub fn get_opt() -> Opt {
 }
 
 pub fn get_test_opt() -> Opt {
-    let args= [env!("CARGO_PKG_NAME"), "192.168.1.1/24", "-g=8"];
+    let args = [env!("CARGO_PKG_NAME"), "192.168.1.1/24", "-g=8"];
     let mut opt: Opt = Opt::from_iter(args.iter());
     opt.local_addr = crate::utils::get_interface_ipv4_addr(&opt.interface).unwrap();
     opt
