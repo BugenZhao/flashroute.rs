@@ -61,7 +61,10 @@ pub async fn process_topo(topo: TopoGraph) -> Result<()> {
     }
 
     log::info!("Saving topology to {}...", dot_path);
-    write!("graph {\n    overlap = false; splines = true;\n");
+    write!("graph {\n    overlap = false;\n");
+    if OPT.spline {
+        write!("    splines = true;\n");
+    }
     for s in format!("{}", dot_content).lines() {
         write!(s);
         write!("\n");
