@@ -50,6 +50,12 @@ impl Tracerouter {
             return Err(Error::BadGrainOrNet(OPT.grain, OPT.targets));
         }
 
+        log::info!(
+            "Using interface `{}` ({})",
+            OPT.interface.name,
+            crate::utils::get_interface_ipv4_addr(&OPT.interface).unwrap()
+        );
+
         log::info!("Generating targets...");
         let all_count = Self::targets_count();
         let mut targets = DcbMap::with_capacity(all_count);
@@ -295,7 +301,8 @@ impl Tracerouter {
         let _ = stop_tx.send(());
 
         self.sent_probes.fetch_add(nm.sent_packets(), SeqCst);
-        self.recv_responses_main.fetch_add(nm.recv_packets(), SeqCst);
+        self.recv_responses_main
+            .fetch_add(nm.recv_packets(), SeqCst);
 
         Ok(topo_task.await.unwrap().await)
     }
