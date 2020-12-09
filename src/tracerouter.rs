@@ -40,7 +40,8 @@ pub struct Tracerouter {
     // preprobe_update_count: Arc<AtomicU64>,
     sent_preprobes: AtomicU64,
     sent_probes: AtomicU64,
-    recv_responses: AtomicU64,
+    recv_responses_pre: AtomicU64,
+    recv_responses_main: AtomicU64,
 }
 
 impl Tracerouter {
@@ -115,10 +116,11 @@ impl Tracerouter {
 
     pub fn summary(&self) {
         log::info!(
-            "[Summary] sent preprobes: {:?}, sent probes: {:?}, received responses: {:?}",
+            "[Summary] Pre: sent {:?}, recv {:?};  Main: sent {:?}, recv {:?}",
             self.sent_preprobes,
+            self.recv_responses_pre,
             self.sent_probes,
-            self.recv_responses
+            self.recv_responses_main
         );
     }
 
@@ -165,7 +167,7 @@ impl Tracerouter {
         let _ = stop_tx.send(());
 
         self.sent_preprobes.fetch_add(nm.sent_packets(), SeqCst);
-        self.recv_responses.fetch_add(nm.recv_packets(), SeqCst);
+        self.recv_responses_pre.fetch_add(nm.recv_packets(), SeqCst);
 
         Ok(())
     }
@@ -274,11 +276,13 @@ impl Tracerouter {
 
             let remain_count = keys.len();
             log::info!(
-                "round {:3}: total {:8}, complete {:8}, remain {:8}",
+                "round {:3}: total {:8}, complete {:8}, remain {:8}; sent {:8}, recv {:8}",
                 round,
                 total_count,
                 total_count - remain_count,
-                remain_count
+                remain_count,
+                nm.sent_packets(),
+                nm.recv_packets(),
             );
         }
         // WORKER END
@@ -291,7 +295,7 @@ impl Tracerouter {
         let _ = stop_tx.send(());
 
         self.sent_probes.fetch_add(nm.sent_packets(), SeqCst);
-        self.recv_responses.fetch_add(nm.recv_packets(), SeqCst);
+        self.recv_responses_main.fetch_add(nm.recv_packets(), SeqCst);
 
         Ok(topo_task.await.unwrap().await)
     }

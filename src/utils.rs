@@ -60,6 +60,7 @@ pub async fn process_topo(topo: TopoGraph) -> Result<()> {
         };
     }
 
+    log::info!("Saving topology to {}...", dot_path);
     write!("graph {\n    overlap = false; splines = true;\n");
     for s in format!("{}", dot_content).lines() {
         write!(s);
@@ -67,6 +68,7 @@ pub async fn process_topo(topo: TopoGraph) -> Result<()> {
     }
     write!("}\n");
 
+    log::info!("Plotting to {}...", viz_path);
     if OPT.plot {
         tokio::process::Command::new("dot")
             .arg("-K")
