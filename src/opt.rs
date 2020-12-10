@@ -58,7 +58,7 @@ pub struct Opt {
     #[structopt(short = "D", long)]
     pub debug: bool,
 
-    // Target options
+    // Target
     #[structopt(short, long, default_value = "8")]
     pub grain: u8,
     #[structopt(parse(try_from_str = parse_targets))]
