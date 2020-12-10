@@ -16,6 +16,10 @@ pub enum Error {
     UnexpectedIcmpType(pnet::packet::icmp::IcmpType, pnet::packet::icmp::IcmpCode),
     #[error("")]
     BadGrainOrNet(u8, ipnet::Ipv4Net),
+    #[error("")]
+    InvalidIpv4Addr(String),
+    #[error("")]
+    CannotResolveTargets(String),
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error), // thus io::Error can implicitly `into` IoError
 }

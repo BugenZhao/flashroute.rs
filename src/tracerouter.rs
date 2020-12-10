@@ -17,6 +17,7 @@ use crate::{
     dcb::DstCtrlBlock,
     error::*,
     network::NetworkManager,
+    opt::Targets,
     prober::ProbePhase,
     prober::ProbeResult,
     prober::Prober,
@@ -46,31 +47,14 @@ pub struct Tracerouter {
 
 impl Tracerouter {
     pub fn new() -> Result<Self> {
-        if OPT.grain > (OPT.targets.max_prefix_len() - OPT.targets.prefix_len()) {
-            return Err(Error::BadGrainOrNet(OPT.grain, OPT.targets));
-        }
-
         log::info!(
             "Using interface `{}` ({})",
             OPT.interface.name,
             crate::utils::get_interface_ipv4_addr(&OPT.interface).unwrap()
         );
 
-        log::info!("Generating targets...");
-        let all_count = Self::targets_count();
-        let mut targets = DcbMap::with_capacity(all_count);
-        for addr in Self::random_targets() {
-            targets.insert(
-                Self::addr_to_key(addr),
-                DstCtrlBlock::new(addr, OPT.default_ttl),
-            );
-        }
-        let filtered_count = targets.len();
-        log::info!(
-            "Generated {} targets, {} removed",
-            filtered_count,
-            all_count - filtered_count
-        );
+        log::info!("Initializing targets...");
+        let targets = Self::generate_targets()?;
 
         Ok(Self {
             targets: Arc::new(targets),
@@ -83,28 +67,67 @@ impl Tracerouter {
         (u >> (OPT.grain)) as AddrKey
     }
 
-    fn targets_count() -> usize {
-        1 << ((OPT.targets.max_prefix_len() - OPT.targets.prefix_len()) - OPT.grain)
-    }
-
-    fn random_targets() -> impl Iterator<Item = Ipv4Addr> {
-        let mut rng = StdRng::seed_from_u64(OPT.seed);
-        let subnets = OPT
-            .targets
-            .subnets(OPT.targets.max_prefix_len() - OPT.grain)
-            .unwrap();
-
-        subnets
-            .map(move |net| net.addr().saturating_add(rng.gen_range(0, 1 << OPT.grain)))
-            .filter(|addr| {
-                if OPT.global_only && OPT.allow_private {
-                    addr.is_bz_global() || addr.is_private()
-                } else if OPT.global_only {
-                    addr.is_bz_global()
-                } else {
-                    true
+    fn generate_targets() -> Result<DcbMap> {
+        match OPT.targets.clone() {
+            Targets::Net(net) => {
+                if OPT.grain > (net.max_prefix_len() - net.prefix_len()) {
+                    return Err(Error::BadGrainOrNet(OPT.grain, net));
                 }
-            })
+
+                let mut rng = StdRng::seed_from_u64(OPT.seed);
+                let subnets = net.subnets(net.max_prefix_len() - OPT.grain).unwrap();
+
+                let iter = subnets
+                    .map(move |net| net.addr().saturating_add(rng.gen_range(0, 1 << OPT.grain)))
+                    .filter(|addr| {
+                        if OPT.global_only && OPT.allow_private {
+                            addr.is_bz_global() || addr.is_private()
+                        } else if OPT.global_only {
+                            addr.is_bz_global()
+                        } else {
+                            true
+                        }
+                    });
+
+                let all_count = 1 << ((net.max_prefix_len() - net.prefix_len()) - OPT.grain);
+                let mut generated_targets = DcbMap::with_capacity(all_count);
+                for addr in iter {
+                    generated_targets.insert(
+                        Self::addr_to_key(addr),
+                        DstCtrlBlock::new(addr, OPT.default_ttl),
+                    );
+                }
+                let filtered_count = generated_targets.len();
+                log::info!(
+                    "Generated {} targets, {} removed",
+                    filtered_count,
+                    all_count - filtered_count
+                );
+
+                Ok(generated_targets)
+            }
+
+            Targets::List(path) => {
+                let mut generated_targets = DcbMap::new();
+
+                let content = std::fs::read_to_string(path)?;
+                for line in content.lines() {
+                    if line.is_empty() {
+                        continue;
+                    }
+                    let addr = line
+                        .parse()
+                        .or(Err(Error::InvalidIpv4Addr(line.to_owned())))?;
+                    generated_targets.insert(
+                        Self::addr_to_key(addr),
+                        DstCtrlBlock::new(addr, OPT.default_ttl),
+                    );
+                }
+                log::info!("Imported {} targets from file", generated_targets.len());
+
+                Ok(generated_targets)
+            }
+        }
     }
 }
 
@@ -349,13 +372,14 @@ mod test {
     #[test]
     fn test_generation() {
         let tr = Tracerouter::new().unwrap();
-        assert_eq!(
-            tr.targets.len(),
-            1 << (32 - OPT.targets.prefix_len() - OPT.grain)
-        );
-        assert!(tr
-            .targets
-            .values()
-            .all(|dcb| OPT.targets.contains(&dcb.addr)));
+        if let Targets::Net(targets) = OPT.targets {
+            assert_eq!(
+                tr.targets.len(),
+                1 << (32 - targets.prefix_len() - OPT.grain)
+            );
+            assert!(tr.targets.values().all(|dcb| targets.contains(&dcb.addr)));
+        } else {
+            panic!();
+        }
     }
 }

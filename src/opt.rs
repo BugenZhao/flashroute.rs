@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use structopt::StructOpt;
 
+use crate::error::*;
 use crate::utils;
 
 #[derive(Debug, StructOpt)]
@@ -57,11 +58,11 @@ pub struct Opt {
     #[structopt(short = "D", long)]
     pub debug: bool,
 
-    // Target
+    // Target options
     #[structopt(short, long, default_value = "8")]
     pub grain: u8,
-    #[structopt()]
-    pub targets: ipnet::Ipv4Net,
+    #[structopt(parse(try_from_str = parse_targets))]
+    pub targets: Targets,
     #[structopt(long)]
     pub global_only: bool,
     #[structopt(long)]
@@ -70,6 +71,22 @@ pub struct Opt {
     // Generated
     #[structopt(skip = ("0.0.0.0".parse::<std::net::Ipv4Addr>().unwrap()))]
     pub local_addr: std::net::Ipv4Addr,
+}
+
+#[derive(Debug, Clone)]
+pub enum Targets {
+    Net(ipnet::Ipv4Net),
+    List(PathBuf),
+}
+
+pub fn parse_targets(arg: &str) -> Result<Targets> {
+    if let Ok(net) = arg.parse() {
+        Ok(Targets::Net(net))
+    } else if let Ok(path) = arg.parse() {
+        Ok(Targets::List(path))
+    } else {
+        Err(Error::CannotResolveTargets(arg.to_owned()))
+    }
 }
 
 pub fn get_opt() -> Opt {

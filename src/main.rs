@@ -41,6 +41,8 @@ async fn main() -> Result<()> {
     #[cfg(unix)]
     utils::ensure_su();
 
+    log::info!("{:?}", *OPT);
+
     #[cfg(debug_assertions)]
     log::warn!(
         "{} is built in DEBUG mode, thus may perform quite poorly.",
