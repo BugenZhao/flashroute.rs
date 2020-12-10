@@ -38,6 +38,10 @@ Compared to the original implementation, the main features of *flashroute.rs* ar
     ```shell
     cargo run --release -- 192.168.1.1/32 --grain 0
     ```
+- Probe all hosts listed in a file line by line
+    ```shell
+    cargo run --release -- path/to/file --grain 8
+    ```
 
 Listening on ICMP socket requires superuser permission, the *flashroute.rs* may automatically restart in sudo mode.
 
