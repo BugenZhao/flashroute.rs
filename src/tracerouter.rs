@@ -40,11 +40,14 @@ pub struct Tracerouter {
     stopped: Arc<AtomicBool>,
 
     // stats
-    // preprobe_update_count: Arc<AtomicU64>,
     sent_preprobes: AtomicU64,
     sent_probes: AtomicU64,
     recv_responses_pre: AtomicU64,
     recv_responses_main: AtomicU64,
+
+    backward_count: AtomicU64,
+    forward_count: AtomicU64,
+    total_count: AtomicU64,
 }
 
 impl Tracerouter {
@@ -149,17 +152,13 @@ impl Tracerouter {
 
 impl Tracerouter {
     pub async fn run(&self) -> Result<TopoGraph> {
+        let start_time = SystemTime::now();
+
         let _ = self.run_preprobing_task().await?;
         let topo = self.run_probing_task().await?;
-        self.summary();
-        Ok(topo)
-    }
 
-    pub fn stop(&self) {
-        self.stopped.store(true, SeqCst);
-    }
+        let end_time = SystemTime::now();
 
-    pub fn summary(&self) {
         log::info!(
             "[Summary] Pre: sent {:?}, recv {:?};  Main: sent {:?}, recv {:?}",
             self.sent_preprobes,
@@ -167,6 +166,22 @@ impl Tracerouter {
             self.sent_probes,
             self.recv_responses_main
         );
+        log::info!(
+            "[Summary] Elapsed: {} secs",
+            end_time.duration_since(start_time).unwrap().as_secs()
+        );
+        log::info!(
+            "[Summary] Interfaces: forward {}, backward {}, sum {}",
+            self.forward_count.load(SeqCst),
+            self.backward_count.load(SeqCst),
+            self.total_count.load(SeqCst),
+        );
+
+        Ok(topo)
+    }
+
+    pub fn stop(&self) {
+        self.stopped.store(true, SeqCst);
     }
 
     fn stopped(&self) -> bool {
@@ -258,7 +273,7 @@ impl Tracerouter {
 
         let topo_task = tokio::spawn(async move { Topo::new(topo_rx).run() });
 
-        tokio::spawn(async move {
+        let callback_task = tokio::spawn(async move {
             loop {
                 tokio::select! {
                     Some(result) = recv_rx.recv() => {
@@ -267,10 +282,11 @@ impl Tracerouter {
                     }
                     _ = &mut stop_rx => {
                         let _ = cb_topo_tx.send(TopoReq::Stop);
-                        return;
+                        break;
                     }
                 };
             }
+            return (backward_stop_set, forward_discovery_set);
         });
 
         // WORKER BEGIN
@@ -321,7 +337,7 @@ impl Tracerouter {
 
             let remain_count = keys.len();
             log::info!(
-                "round {:3}: total {:8}, complete {:8}, remain {:8}; sent {:8}, recv {:8}",
+                "round {:3}: total {:8}, complete {:8}, remain {:8};  sent {:8}, recv {:8}",
                 round,
                 total_count,
                 total_count - remain_count,
@@ -338,6 +354,13 @@ impl Tracerouter {
         }
         nm.stop();
         let _ = stop_tx.send(());
+        let (mut backward_set, forward_set) = callback_task.await.unwrap();
+
+        // stats
+        self.backward_count.store(backward_set.len() as u64, SeqCst);
+        self.forward_count.store(forward_set.len() as u64, SeqCst);
+        backward_set.extend(&forward_set);
+        self.total_count.store(backward_set.len() as u64, SeqCst);
 
         self.sent_probes.fetch_add(nm.sent_packets(), SeqCst);
         self.recv_responses_main
@@ -375,6 +398,7 @@ impl Tracerouter {
                 }
             } else {
                 // from destination
+                backward_stop_set.insert(result.responder);
                 dcb.stop_forward();
             }
         }
