@@ -1,5 +1,7 @@
 use std::{
+    io::Write,
     net::Ipv4Addr,
+    path::PathBuf,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
@@ -55,6 +57,11 @@ impl Tracerouter {
 
         log::info!("Initializing targets...");
         let targets = Self::generate_targets()?;
+
+        if let Some(path) = OPT.dump_targets.clone() {
+            log::info!("Dumping targets...");
+            Self::dump_targets(&targets, &path)?;
+        }
 
         Ok(Self {
             targets: Arc::new(targets),
@@ -128,6 +135,15 @@ impl Tracerouter {
                 Ok(generated_targets)
             }
         }
+    }
+
+    fn dump_targets(targets: &DcbMap, path: &PathBuf) -> Result<()> {
+        let mut file = std::fs::File::create(path)?;
+        for DstCtrlBlock { addr, .. } in targets.values() {
+            file.write_fmt(format_args!("{}\n", addr.to_string()))?;
+        }
+
+        Ok(())
     }
 }
 
