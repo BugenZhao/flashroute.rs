@@ -50,41 +50,43 @@ pub fn ip_checksum(addr: Ipv4Addr, salt: u16) -> u16 {
 pub async fn process_topo(topo: TopoGraph) -> Result<()> {
     log::info!("[Summary] Total probed hosts: {}", topo.node_count());
 
-    let dot_content = Dot::with_config(&topo, &[petgraph::dot::Config::GraphContentOnly]);
+    if OPT.dot {
+        let dot_content = Dot::with_config(&topo, &[petgraph::dot::Config::GraphContentOnly]);
 
-    let dot_path = OPT.output_dot.to_str().unwrap();
-    let viz_path = OPT.output_viz.to_str().unwrap();
-    let mut dot_file = tokio::fs::File::create(dot_path).await?;
+        let dot_path = OPT.output_dot.to_str().unwrap();
+        let viz_path = OPT.output_viz.to_str().unwrap();
+        let mut dot_file = tokio::fs::File::create(dot_path).await?;
 
-    macro_rules! write {
-        ($str:expr) => {
-            dot_file.write($str.as_bytes()).await?;
-        };
-    }
+        macro_rules! write {
+            ($str:expr) => {
+                dot_file.write($str.as_bytes()).await?;
+            };
+        }
 
-    log::info!("Saving topology to {}...", dot_path);
-    write!("graph {\n    overlap = false;\n");
-    if OPT.spline {
-        write!("    splines = true;\n");
-    }
-    for s in format!("{}", dot_content).lines() {
-        write!(s);
-        write!("\n");
-    }
-    write!("}\n");
+        log::info!("Saving topology to {}...", dot_path);
+        write!("graph {\n    overlap = false;\n");
+        if OPT.spline {
+            write!("    splines = true;\n");
+        }
+        for s in format!("{}", dot_content).lines() {
+            write!(s);
+            write!("\n");
+        }
+        write!("}\n");
 
-    if OPT.plot {
-        log::info!("Plotting to {}...", viz_path);
-        tokio::process::Command::new("dot")
-            .arg("-K")
-            .arg(OPT.layout.as_str())
-            .arg("-Tpng")
-            .arg(dot_path)
-            .arg("-o")
-            .arg(viz_path)
-            .spawn()?
-            .wait()
-            .await?;
+        if OPT.plot {
+            log::info!("Plotting to {}...", viz_path);
+            tokio::process::Command::new("dot")
+                .arg("-K")
+                .arg(OPT.layout.as_str())
+                .arg("-Tpng")
+                .arg(dot_path)
+                .arg("-o")
+                .arg(viz_path)
+                .spawn()?
+                .wait()
+                .await?;
+        }
     }
 
     Ok(())

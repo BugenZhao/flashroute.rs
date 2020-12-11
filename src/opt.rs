@@ -35,6 +35,8 @@ pub struct Opt {
     pub payload_message: String,
 
     // Output
+    #[structopt(long = "no-dot", parse(from_flag = std::ops::Not::not))]
+    pub dot: bool,
     #[structopt(long = "no-plot", parse(from_flag = std::ops::Not::not))]
     pub plot: bool,
     #[structopt(short = "o", long, default_value = "fr.dot")]
