@@ -47,7 +47,6 @@ pub struct Tracerouter {
 
     backward_count: AtomicU64,
     forward_count: AtomicU64,
-    total_count: AtomicU64,
 }
 
 impl Tracerouter {
@@ -104,7 +103,7 @@ impl Tracerouter {
                 for addr in iter {
                     generated_targets.insert(
                         Self::addr_to_key(addr),
-                        DstCtrlBlock::new(addr, OPT.default_ttl),
+                        DstCtrlBlock::new(addr, OPT.split_ttl),
                     );
                 }
                 let filtered_count = generated_targets.len();
@@ -130,7 +129,7 @@ impl Tracerouter {
                         .or(Err(Error::InvalidIpv4Addr(line.to_owned())))?;
                     generated_targets.insert(
                         Self::addr_to_key(addr),
-                        DstCtrlBlock::new(addr, OPT.default_ttl),
+                        DstCtrlBlock::new(addr, OPT.split_ttl),
                     );
                 }
                 log::info!("Imported {} targets from file", generated_targets.len());
@@ -171,10 +170,9 @@ impl Tracerouter {
             end_time.duration_since(start_time).unwrap().as_secs()
         );
         log::info!(
-            "[Summary] Interfaces: forward {}, backward {}, sum {}",
+            "[Summary] Interfaces: forward {}, backward {}",
             self.forward_count.load(SeqCst),
             self.backward_count.load(SeqCst),
-            self.total_count.load(SeqCst),
         );
 
         Ok(topo)
@@ -265,8 +263,8 @@ impl Tracerouter {
         let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
 
         let targets = self.targets.clone();
-        let mut backward_stop_set = HashSet::<Ipv4Addr>::new();
-        let mut forward_discovery_set = HashSet::<Ipv4Addr>::new();
+        let mut backward_stop_set = HashSet::<Ipv4Addr>::with_capacity(1_100_000);
+        let mut forward_discovery_set = HashSet::<Ipv4Addr>::with_capacity(200_000);
 
         let (topo_tx, topo_rx) = mpsc::unbounded_channel();
         let cb_topo_tx = topo_tx.clone();
@@ -354,13 +352,11 @@ impl Tracerouter {
         }
         nm.stop();
         let _ = stop_tx.send(());
-        let (mut backward_set, forward_set) = callback_task.await.unwrap();
+        let (backward_set, forward_set) = callback_task.await.unwrap();
 
         // stats
         self.backward_count.store(backward_set.len() as u64, SeqCst);
         self.forward_count.store(forward_set.len() as u64, SeqCst);
-        backward_set.extend(&forward_set);
-        self.total_count.store(backward_set.len() as u64, SeqCst);
 
         self.sent_probes.fetch_add(nm.sent_packets(), SeqCst);
         self.recv_responses_main
