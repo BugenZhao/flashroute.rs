@@ -81,16 +81,20 @@ impl DstCtrlBlock {
     }
 
     pub fn set_forward_horizon(&self, new_horizon: u8) {
-        if new_horizon == 0 {
-            return;
-        }
-        self.forward_horizon.fetch_max(new_horizon, SeqCst);
+        let _ = self.forward_horizon.fetch_update(SeqCst, SeqCst, |x| {
+            if x == 0 || x >= new_horizon {
+                None
+            } else {
+                Some(new_horizon)
+            }
+        });
     }
 
     pub fn stop_backward(&self) {
-        if !OPT.two || self.backward_count.load(SeqCst) >= 2 {
-            self.next_backward_hop.fetch_min(0, SeqCst);
-        }
+        // if !OPT.two || self.backward_count.load(SeqCst) >= 2 {
+        //     self.next_backward_hop.fetch_min(0, SeqCst);
+        // }
+        self.next_backward_hop.fetch_min(0, SeqCst);
     }
 
     pub fn stop_forward(&self) {
@@ -139,6 +143,8 @@ mod test {
         dcb.set_forward_horizon(5);
         assert_eq!(dcb.pull_forward_task(), Some(4));
         dcb.stop_forward();
+        assert_eq!(dcb.pull_forward_task(), None);
+        dcb.set_forward_horizon(10);
         assert_eq!(dcb.pull_forward_task(), None);
     }
 }

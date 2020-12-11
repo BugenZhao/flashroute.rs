@@ -296,9 +296,8 @@ impl Tracerouter {
         while !keys.is_empty() {
             round += 1;
 
-            let mut new_keys = Vec::new();
             let total_count = keys.len();
-            new_keys.reserve(total_count);
+            let mut new_keys = Vec::with_capacity(total_count);
 
             log::trace!("[Main] loop");
             for key in keys {
@@ -306,23 +305,19 @@ impl Tracerouter {
                     break;
                 }
                 let dcb = self.targets.get(&key).unwrap();
-                match (dcb.pull_forward_task(), dcb.pull_backward_task()) {
-                    (None, None) => {
-                        log::trace!("{} is done!", dcb.addr);
-                        continue;
-                    }
-                    (None, Some(t2)) => {
-                        nm.schedule_probe((dcb.addr, t2)).await;
-                    }
-                    (Some(t1), None) => {
-                        nm.schedule_probe((dcb.addr, t1)).await;
-                    }
-                    (Some(t1), Some(t2)) => {
-                        nm.schedule_probe((dcb.addr, t1)).await;
-                        nm.schedule_probe((dcb.addr, t2)).await;
-                    }
+
+                let mut ok = true;
+                if let Some(t) = dcb.pull_backward_task() {
+                    nm.schedule_probe((dcb.addr, t)).await;
+                    ok = false;
                 }
-                new_keys.push(key);
+                if let Some(t) = dcb.pull_forward_task() {
+                    nm.schedule_probe((dcb.addr, t)).await;
+                    ok = false;
+                }
+                if !ok {
+                    new_keys.push(key);
+                }
             }
             keys = new_keys;
 
