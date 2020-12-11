@@ -41,6 +41,8 @@ async fn main() -> Result<()> {
     #[cfg(unix)]
     utils::ensure_su();
 
+    log::info!("{:?}", *OPT);
+
     #[cfg(debug_assertions)]
     log::warn!(
         "{} is built in DEBUG mode, thus may perform quite poorly.",
@@ -49,13 +51,12 @@ async fn main() -> Result<()> {
 
     let tr = Arc::new(Tracerouter::new()?);
     let r = tr.clone();
-    let int_handler = tokio::spawn(async move {
+    tokio::spawn(async move {
         tokio::signal::ctrl_c().await.unwrap();
         r.stop();
     });
 
     let topo = tr.run().await?;
-    int_handler.abort();
     process_topo(topo).await?;
 
     #[cfg(windows)]
