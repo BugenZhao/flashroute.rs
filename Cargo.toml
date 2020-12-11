@@ -1,6 +1,6 @@
 [package]
 name = "flashroute_rs"
-version = "0.1.5"
+version = "0.1.6"
 authors = [
     "Bugen Zhao <i@bugenzhao.com>",
     "Zhengdong Wang <lnwzd2009@sjtu.edu.cn>",
