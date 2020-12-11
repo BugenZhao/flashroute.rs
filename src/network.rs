@@ -44,7 +44,7 @@ pub struct NetworkManager {
 
 impl NetworkManager {
     pub fn new(prober: Prober, recv_tx: MpscTx<ProbeResult>) -> Result<Self> {
-        let (send_tx, send_rx) = mpsc::channel(OPT.probing_rate as usize);
+        let (send_tx, send_rx) = mpsc::channel(OPT.probing_rate.min(400_000).max(1_000) as usize);
 
         let prober = Arc::new(prober);
         let sent_packets = Arc::new(AtomicU64::new(0));
