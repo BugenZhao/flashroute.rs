@@ -55,6 +55,8 @@ pub struct Opt {
     pub salt: u16,
     #[structopt(long)]
     pub dry_run: bool,
+    #[structopt(long)]
+    pub dump_targets: Option<PathBuf>,
     #[structopt(short = "D", long)]
     pub debug: bool,
 
