@@ -27,6 +27,9 @@ use Ordering::SeqCst;
 type MpscTx<T> = mpsc::UnboundedSender<T>;
 type MpscRx<T> = mpsc::UnboundedReceiver<T>;
 
+type BMpscTx<T> = mpsc::Sender<T>;
+type BMpscRx<T> = mpsc::Receiver<T>;
+
 type OneshotTx<T> = oneshot::Sender<T>;
 type OneshotRx<T> = oneshot::Receiver<T>;
 
@@ -34,14 +37,14 @@ pub struct NetworkManager {
     prober: Arc<Prober>,
     sent_packets: Arc<AtomicU64>,
     recv_packets: Arc<AtomicU64>,
-    send_tx: MpscTx<ProbeUnit>,
+    send_tx: BMpscTx<ProbeUnit>,
     stopped: Arc<AtomicBool>,
     stop_txs: Vec<OneshotTx<()>>,
 }
 
 impl NetworkManager {
     pub fn new(prober: Prober, recv_tx: MpscTx<ProbeResult>) -> Result<Self> {
-        let (send_tx, send_rx) = mpsc::unbounded_channel();
+        let (send_tx, send_rx) = mpsc::channel(OPT.probing_rate as usize);
 
         let prober = Arc::new(prober);
         let sent_packets = Arc::new(AtomicU64::new(0));
@@ -74,7 +77,7 @@ impl NetworkManager {
 
     fn start_sending_task(
         prober: Arc<Prober>,
-        mut rx: MpscRx<ProbeUnit>,
+        mut rx: BMpscRx<ProbeUnit>,
         mut stop_rx: OneshotRx<()>,
         sent_packets: Arc<AtomicU64>,
     ) -> Result<()> {
@@ -222,8 +225,8 @@ impl NetworkManager {
         Ok(())
     }
 
-    pub fn schedule_probe(&self, unit: ProbeUnit) {
-        match self.send_tx.send(unit) {
+    pub async fn schedule_probe(&self, unit: ProbeUnit) {
+        match self.send_tx.send(unit).await {
             Ok(_) => {
                 log::trace!("SCHEDULE: {:?}", unit);
             }
