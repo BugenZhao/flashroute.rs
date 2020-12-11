@@ -200,7 +200,7 @@ impl Tracerouter {
             if self.stopped() {
                 break;
             }
-            nm.schedule_probe((target.addr, OPT.preprobing_ttl));
+            nm.schedule_probe((target.addr, OPT.preprobing_ttl)).await;
         }
         // WORKER END
 
@@ -298,14 +298,14 @@ impl Tracerouter {
                         continue;
                     }
                     (None, Some(t2)) => {
-                        nm.schedule_probe((dcb.addr, t2));
+                        nm.schedule_probe((dcb.addr, t2)).await;
                     }
                     (Some(t1), None) => {
-                        nm.schedule_probe((dcb.addr, t1));
+                        nm.schedule_probe((dcb.addr, t1)).await;
                     }
                     (Some(t1), Some(t2)) => {
-                        nm.schedule_probe((dcb.addr, t1));
-                        nm.schedule_probe((dcb.addr, t2));
+                        nm.schedule_probe((dcb.addr, t1)).await;
+                        nm.schedule_probe((dcb.addr, t2)).await;
                     }
                 }
                 new_keys.push(key);
