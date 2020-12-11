@@ -45,8 +45,8 @@ impl Topo {
             results.sort_by_key(|r| r.distance);
             if let Some(first) = results.first() {
                 let dist = first.distance;
+                graph.add_node(first.responder);
                 if dist <= 1 {
-                    graph.add_node(first.responder);
                     graph.add_edge(local.responder, first.responder, dist);
                 }
             }

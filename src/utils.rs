@@ -48,6 +48,8 @@ pub fn ip_checksum(addr: Ipv4Addr, salt: u16) -> u16 {
 }
 
 pub async fn process_topo(topo: TopoGraph) -> Result<()> {
+    log::info!("[Summary] Total probed hosts: {}", topo.node_count());
+
     let dot_content = Dot::with_config(&topo, &[petgraph::dot::Config::GraphContentOnly]);
 
     let dot_path = OPT.output_dot.to_str().unwrap();
@@ -71,8 +73,8 @@ pub async fn process_topo(topo: TopoGraph) -> Result<()> {
     }
     write!("}\n");
 
-    log::info!("Plotting to {}...", viz_path);
     if OPT.plot {
+        log::info!("Plotting to {}...", viz_path);
         tokio::process::Command::new("dot")
             .arg("-K")
             .arg(OPT.layout.as_str())
