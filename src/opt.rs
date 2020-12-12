@@ -23,6 +23,8 @@ pub struct Opt {
     pub probing_rate: u64,
     #[structopt(short = "2", help = "Send at least 2 probes to each target")]
     pub two: bool,
+    #[structopt(long)]
+    pub router_only: bool,
 
     // Connection
     #[structopt(long, parse(try_from_str = utils::get_interface), default_value = "")]

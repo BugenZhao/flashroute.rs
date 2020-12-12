@@ -410,7 +410,9 @@ impl Tracerouter {
                 }
             } else {
                 // from destination
-                backward_stop_set.insert(result.responder);
+                if !OPT.router_only {
+                    backward_stop_set.insert(result.responder);
+                }
                 dcb.stop_forward();
             }
         }
