@@ -224,6 +224,19 @@ impl Tracerouter {
         nm.stop();
         let _ = stop_tx.send(());
 
+        let preprobed_count = {
+            let mut c = 0u64;
+            for _ in self
+                .targets
+                .values()
+                .filter(|dcb| dcb.preprobed.load(SeqCst))
+            {
+                c += 1;
+            }
+            c
+        };
+        log::info!("Preprobed: {}", preprobed_count);
+
         self.sent_preprobes.fetch_add(nm.sent_packets(), SeqCst);
         self.recv_responses_pre.fetch_add(nm.recv_packets(), SeqCst);
 
@@ -243,7 +256,7 @@ impl Tracerouter {
             // proximity
             let lo = 0.max(key - OPT.proximity_span as AddrKey);
             let hi = key + OPT.proximity_span as AddrKey;
-            for n_key in lo..hi {
+            for n_key in lo..=hi {
                 if n_key == key {
                     continue;
                 }
@@ -300,7 +313,10 @@ impl Tracerouter {
             let mut new_keys = Vec::with_capacity(total_count);
 
             log::trace!("[Main] loop");
+            let mut pb = pbr::ProgressBar::new(total_count as u64);
+            pb.set_max_refresh_rate(Some(Duration::from_millis(100)));
             for key in keys {
+                pb.inc();
                 if self.stopped() {
                     break;
                 }
@@ -319,6 +335,7 @@ impl Tracerouter {
                     new_keys.push(key);
                 }
             }
+            pb.finish();
             keys = new_keys;
 
             let duration = SystemTime::now().duration_since(last_seen).unwrap();

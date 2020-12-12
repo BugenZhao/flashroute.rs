@@ -17,6 +17,7 @@ use crate::{
 use pnet::{
     packet::{
         ip::IpNextHeaderProtocols::{Icmp, Udp},
+        ipv4::Ipv4Packet,
         Packet,
     },
     transport::{transport_channel, TransportChannelType::Layer3},
@@ -73,8 +74,6 @@ impl NetworkManager {
         })
     }
 
-    const RECV_BUF_SIZE: usize = 400 * 1024;
-
     fn start_sending_task(
         prober: Arc<Prober>,
         mut rx: BMpscRx<ProbeUnit>,
@@ -90,7 +89,6 @@ impl NetworkManager {
 
             let mut sent_this_sec = 0u64;
             let mut last_seen = SystemTime::now();
-
             let one_sec = Duration::from_secs(1);
 
             loop {
@@ -112,7 +110,10 @@ impl NetworkManager {
                             }
                         }
 
-                        let packet = prober.pack(dst_unit, local_ip);
+                        let mut buf = [0u8; Prober::PACK_BUFFER_LENGTH];
+                        let len = prober.pack(dst_unit, local_ip, &mut buf);
+                        let packet = Ipv4Packet::new(&buf[..len]).unwrap();
+
                         if !OPT.dry_run {
                             let _ = sender.send_to(packet, IpAddr::V4(dst_unit.0));
                         }
@@ -130,6 +131,8 @@ impl NetworkManager {
 
         Ok(())
     }
+
+    const RECV_BUF_SIZE: usize = 400 * 1024;
 
     fn start_recving_task(
         prober: Arc<Prober>,

@@ -22,6 +22,11 @@ tokio = { version = "0.3", features = ["full"] }
 rand = "0.7"
 petgraph = "0.5"
 hashbrown = "0.9"
+pbr = "1.0"
 
 [target.'cfg(unix)'.dependencies]
 sudo = "0.5"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1

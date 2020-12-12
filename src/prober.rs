@@ -32,6 +32,7 @@ pub struct Prober {
 impl Prober {
     const IPV4_HEADER_LENGTH: u16 = 20;
     const ICMP_HEADER_LENGTH: u16 = 8;
+    pub const PACK_BUFFER_LENGTH: usize = 256;
 
     pub fn new(phase: ProbePhase, encode_timestamp: bool) -> Self {
         Self {
@@ -44,7 +45,12 @@ impl Prober {
 pub type ProbeUnit = (Ipv4Addr, u8);
 
 impl Prober {
-    pub fn pack(&self, destination: ProbeUnit, source_ip: Ipv4Addr) -> Ipv4Packet {
+    pub fn pack(
+        &self,
+        destination: ProbeUnit,
+        source_ip: Ipv4Addr,
+        buffer: &mut [u8; Self::PACK_BUFFER_LENGTH],
+    ) -> usize {
         let (dst_ip, ttl) = destination;
         let timestamp = crate::utils::timestamp_ms_u16();
         let expect_total_size = {
@@ -56,12 +62,14 @@ impl Prober {
         };
         let expect_udp_size = expect_total_size - Self::IPV4_HEADER_LENGTH;
 
-        let mut udp_packet = MutableUdpPacket::owned(vec![0u8; expect_udp_size as usize]).unwrap();
-        udp_packet.set_source(crate::utils::ip_checksum(dst_ip, OPT.salt)); // TODO: is this ok?
+        let mut udp_packet =
+            MutableUdpPacket::new(&mut buffer[Self::IPV4_HEADER_LENGTH as usize..]).unwrap();
+        udp_packet.set_source(crate::utils::ip_checksum(dst_ip, OPT.salt));
         udp_packet.set_destination(OPT.dst_port);
         udp_packet.set_length(expect_udp_size);
         udp_packet.set_payload(OPT.payload_message.as_bytes());
 
+        let mut ip_packet = MutableIpv4Packet::new(buffer).unwrap();
         let ip_id = {
             let mut id = (ttl as u16 & 0x1F) | ((self.phase as u16 & 0x1) << 5);
             if self.encode_timestamp {
@@ -69,9 +77,6 @@ impl Prober {
             }
             id
         };
-
-        let mut ip_packet =
-            MutableIpv4Packet::owned(vec![0u8; expect_total_size as usize]).unwrap();
         ip_packet.set_version(4);
         ip_packet.set_header_length((Self::IPV4_HEADER_LENGTH >> 2) as u8);
         ip_packet.set_destination(dst_ip);
@@ -81,11 +86,7 @@ impl Prober {
         ip_packet.set_identification(ip_id);
         ip_packet.set_total_length(expect_total_size);
 
-        ip_packet.set_payload(udp_packet.packet());
-
-        // TODO: is it ok to ignore checksums?
-
-        return ip_packet.consume_to_immutable();
+        return expect_total_size as usize;
     }
 
     pub fn parse(&self, packet: &[u8], ignore_port: bool) -> Result<ProbeResult> {
@@ -195,9 +196,9 @@ mod test {
 
     #[test]
     fn test_pack() {
-        let prober = Prober::new(ProbePhase::Pre, true);
-        let packet = prober.pack((*IP1, 32), *IP2);
-        println!("{:#?}", packet);
+        // let prober = Prober::new(ProbePhase::Pre, true);
+        // let packet = prober.pack((*IP1, 32), *IP2);
+        // println!("{:#?}", packet);
     }
 
     #[test]
