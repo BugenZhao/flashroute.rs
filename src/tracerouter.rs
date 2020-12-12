@@ -209,12 +209,16 @@ impl Tracerouter {
         });
 
         // WORKER BEGIN
+        let mut pb = pbr::ProgressBar::new(self.targets.len() as u64);
+        pb.set_max_refresh_rate(Some(Duration::from_millis(100)));
         for target in self.targets.values() {
+            pb.inc();
             if self.stopped() {
                 break;
             }
             nm.schedule_probe((target.addr, OPT.preprobing_ttl)).await;
         }
+        pb.finish();
         // WORKER END
 
         if !self.stopped() {
@@ -223,6 +227,19 @@ impl Tracerouter {
         }
         nm.stop();
         let _ = stop_tx.send(());
+
+        let preprobed_count = {
+            let mut c = 0u64;
+            for _ in self
+                .targets
+                .values()
+                .filter(|dcb| dcb.preprobed.load(SeqCst))
+            {
+                c += 1;
+            }
+            c
+        };
+        log::info!("Preprobed: {}", preprobed_count);
 
         self.sent_preprobes.fetch_add(nm.sent_packets(), SeqCst);
         self.recv_responses_pre.fetch_add(nm.recv_packets(), SeqCst);
@@ -243,7 +260,7 @@ impl Tracerouter {
             // proximity
             let lo = 0.max(key - OPT.proximity_span as AddrKey);
             let hi = key + OPT.proximity_span as AddrKey;
-            for n_key in lo..hi {
+            for n_key in lo..=hi {
                 if n_key == key {
                     continue;
                 }
@@ -296,34 +313,33 @@ impl Tracerouter {
         while !keys.is_empty() {
             round += 1;
 
-            let mut new_keys = Vec::new();
             let total_count = keys.len();
-            new_keys.reserve(total_count);
+            let mut new_keys = Vec::with_capacity(total_count);
 
             log::trace!("[Main] loop");
+            let mut pb = pbr::ProgressBar::new(total_count as u64);
+            pb.set_max_refresh_rate(Some(Duration::from_millis(100)));
             for key in keys {
+                pb.inc();
                 if self.stopped() {
                     break;
                 }
                 let dcb = self.targets.get(&key).unwrap();
-                match (dcb.pull_forward_task(), dcb.pull_backward_task()) {
-                    (None, None) => {
-                        log::trace!("{} is done!", dcb.addr);
-                        continue;
-                    }
-                    (None, Some(t2)) => {
-                        nm.schedule_probe((dcb.addr, t2)).await;
-                    }
-                    (Some(t1), None) => {
-                        nm.schedule_probe((dcb.addr, t1)).await;
-                    }
-                    (Some(t1), Some(t2)) => {
-                        nm.schedule_probe((dcb.addr, t1)).await;
-                        nm.schedule_probe((dcb.addr, t2)).await;
-                    }
+
+                let mut ok = true;
+                if let Some(t) = dcb.pull_backward_task() {
+                    nm.schedule_probe((dcb.addr, t)).await;
+                    ok = false;
                 }
-                new_keys.push(key);
+                if let Some(t) = dcb.pull_forward_task() {
+                    nm.schedule_probe((dcb.addr, t)).await;
+                    ok = false;
+                }
+                if !ok {
+                    new_keys.push(key);
+                }
             }
+            pb.finish();
             keys = new_keys;
 
             let duration = SystemTime::now().duration_since(last_seen).unwrap();
@@ -380,10 +396,6 @@ impl Tracerouter {
                 if result.distance > dcb.initial_ttl() {
                     // o-o-o-S-o-X-o-D
                     forward_discovery_set.insert(result.responder);
-                    if result.distance <= dcb.last_forward_task() {
-                        // reasonable distance, update horizon
-                        dcb.set_forward_horizon((result.distance + OPT.gap).min(OPT.max_ttl));
-                    }
                 } else {
                     // o-X-o-S-o-o-o-D
                     let new = backward_stop_set.insert(result.responder);
@@ -391,6 +403,10 @@ impl Tracerouter {
                         log::trace!("STOP for {}", dcb.addr);
                         dcb.stop_backward();
                     }
+                }
+                if result.distance <= dcb.last_forward_task() {
+                    // reasonable distance, update horizon
+                    dcb.set_forward_horizon((result.distance + OPT.gap).min(OPT.max_ttl));
                 }
             } else {
                 // from destination

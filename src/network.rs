@@ -17,6 +17,7 @@ use crate::{
 use pnet::{
     packet::{
         ip::IpNextHeaderProtocols::{Icmp, Udp},
+        ipv4::Ipv4Packet,
         Packet,
     },
     transport::{transport_channel, TransportChannelType::Layer3},
@@ -73,8 +74,6 @@ impl NetworkManager {
         })
     }
 
-    const RECV_BUF_SIZE: usize = 400 * 1024;
-
     fn start_sending_task(
         prober: Arc<Prober>,
         mut rx: BMpscRx<ProbeUnit>,
@@ -85,12 +84,26 @@ impl NetworkManager {
         let (mut sender, _) = transport_channel(0, protocol)?;
         let local_ip = OPT.local_addr;
 
+        let (net_send_tx, mut net_send_rx) = mpsc::channel::<Ipv4Packet>(10000);
+
+        tokio::spawn(async move {
+            loop {
+                if let Some(packet) = net_send_rx.recv().await {
+                    if !OPT.dry_run {
+                        let dst = packet.get_destination();
+                        let _ = sender.send_to(packet, IpAddr::V4(dst));
+                    }
+                } else {
+                    break;
+                }
+            }
+        });
+
         tokio::spawn(async move {
             log::info!("[{:?}] sending task started", prober.phase);
 
             let mut sent_this_sec = 0u64;
             let mut last_seen = SystemTime::now();
-
             let one_sec = Duration::from_secs(1);
 
             loop {
@@ -112,10 +125,11 @@ impl NetworkManager {
                             }
                         }
 
-                        let packet = prober.pack(dst_unit, local_ip);
-                        if !OPT.dry_run {
-                            let _ = sender.send_to(packet, IpAddr::V4(dst_unit.0));
-                        }
+                        let mut buf = vec![0u8; Prober::PACK_BUFFER_LENGTH];
+                        let len = prober.pack(dst_unit, local_ip, &mut buf);
+                        buf.resize(len, 0);
+                        let packet = Ipv4Packet::owned(buf).unwrap();
+                        let _ = net_send_tx.send(packet).await;
 
                         log::trace!("PROBE: {:?}", dst_unit);
 
@@ -130,6 +144,8 @@ impl NetworkManager {
 
         Ok(())
     }
+
+    const RECV_BUF_SIZE: usize = 400 * 1024;
 
     fn start_recving_task(
         prober: Arc<Prober>,
@@ -226,14 +242,7 @@ impl NetworkManager {
     }
 
     pub async fn schedule_probe(&self, unit: ProbeUnit) {
-        match self.send_tx.send(unit).await {
-            Ok(_) => {
-                log::trace!("SCHEDULE: {:?}", unit);
-            }
-            Err(e) => {
-                log::error!("{:?}", e);
-            }
-        }
+        let _ = self.send_tx.send(unit).await;
     }
 
     pub fn stop(&mut self) {
