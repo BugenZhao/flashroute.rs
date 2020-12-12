@@ -396,10 +396,6 @@ impl Tracerouter {
                 if result.distance > dcb.initial_ttl() {
                     // o-o-o-S-o-X-o-D
                     forward_discovery_set.insert(result.responder);
-                    if result.distance <= dcb.last_forward_task() {
-                        // reasonable distance, update horizon
-                        dcb.set_forward_horizon((result.distance + OPT.gap).min(OPT.max_ttl));
-                    }
                 } else {
                     // o-X-o-S-o-o-o-D
                     let new = backward_stop_set.insert(result.responder);
@@ -407,6 +403,10 @@ impl Tracerouter {
                         log::trace!("STOP for {}", dcb.addr);
                         dcb.stop_backward();
                     }
+                }
+                if result.distance <= dcb.last_forward_task() {
+                    // reasonable distance, update horizon
+                    dcb.set_forward_horizon((result.distance + OPT.gap).min(OPT.max_ttl));
                 }
             } else {
                 // from destination
