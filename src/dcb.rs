@@ -3,8 +3,6 @@ use std::{
     sync::atomic::{AtomicBool, AtomicU8, Ordering::SeqCst},
 };
 
-use crate::OPT;
-
 #[derive(Debug)]
 pub struct DstCtrlBlock {
     pub addr: Ipv4Addr,
@@ -14,6 +12,8 @@ pub struct DstCtrlBlock {
     next_forward_hop: AtomicU8,
     forward_horizon: AtomicU8,
     backward_count: AtomicU8,
+
+    pub preprobed: AtomicBool,
 }
 
 impl DstCtrlBlock {
@@ -26,6 +26,8 @@ impl DstCtrlBlock {
             next_forward_hop: AtomicU8::new(initial_ttl + 1),
             forward_horizon: AtomicU8::new(initial_ttl),
             backward_count: AtomicU8::new(0),
+
+            preprobed: AtomicBool::new(false),
         }
     }
 
@@ -39,6 +41,8 @@ impl DstCtrlBlock {
         self.next_forward_hop.store(new_ttl + 1, SeqCst);
         self.forward_horizon.store(new_ttl, SeqCst);
         self.accurate_distance.store(accurate, SeqCst);
+
+        self.preprobed.store(true, SeqCst);
     }
 }
 
