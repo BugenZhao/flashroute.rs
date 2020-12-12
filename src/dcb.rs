@@ -95,9 +95,6 @@ impl DstCtrlBlock {
     }
 
     pub fn stop_backward(&self) {
-        // if !OPT.two || self.backward_count.load(SeqCst) >= 2 {
-        //     self.next_backward_hop.fetch_min(0, SeqCst);
-        // }
         self.next_backward_hop.fetch_min(0, SeqCst);
     }
 

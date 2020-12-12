@@ -21,8 +21,6 @@ pub struct Opt {
     pub gap: u8,
     #[structopt(long, default_value = "400000")]
     pub probing_rate: u64,
-    #[structopt(short = "2", help = "Send at least 2 probes to each target")]
-    pub two: bool,
     #[structopt(long)]
     pub router_only: bool,
 
