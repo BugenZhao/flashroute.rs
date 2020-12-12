@@ -209,12 +209,16 @@ impl Tracerouter {
         });
 
         // WORKER BEGIN
+        let mut pb = pbr::ProgressBar::new(self.targets.len() as u64);
+        pb.set_max_refresh_rate(Some(Duration::from_millis(100)));
         for target in self.targets.values() {
+            pb.inc();
             if self.stopped() {
                 break;
             }
             nm.schedule_probe((target.addr, OPT.preprobing_ttl)).await;
         }
+        pb.finish();
         // WORKER END
 
         if !self.stopped() {

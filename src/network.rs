@@ -229,14 +229,7 @@ impl NetworkManager {
     }
 
     pub async fn schedule_probe(&self, unit: ProbeUnit) {
-        match self.send_tx.send(unit).await {
-            Ok(_) => {
-                log::trace!("SCHEDULE: {:?}", unit);
-            }
-            Err(e) => {
-                log::error!("{:?}", e);
-            }
-        }
+        let _ = self.send_tx.send(unit).await;
     }
 
     pub fn stop(&mut self) {
