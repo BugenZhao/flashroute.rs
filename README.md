@@ -5,7 +5,7 @@ A reproduction of [paper](https://dl.acm.org/doi/10.1145/3419394.3423619) "*Flas
 ## FlashRoute
 > FlashRoute is a tool to discover network topology, which is specially optimized for full Internet topology discovery. 
 > It has high time efficiency in which it can finish the scan over the full IPv4 /24 address space in 7 minutes at probing speed of 200 Kpps, and 17 mins at probing speed of 100 Kpps.
-> It also has high network efficiency, in which it can finish the scan using only 75% of probes used by Scamper and 30% of probes used by Yarrp  to finish the same task.
+> It also has high network efficiency, in which it can finish the scan using only 75% of probes used by Scamper and 30% of probes used by Yarrp to finish the same task.
 
 More introductions for FlashRoute can be found in both the [paper](https://dl.acm.org/doi/10.1145/3419394.3423619) and the [repository](https://github.com/lambdahuang/FlashRoute).
 
@@ -16,8 +16,10 @@ We reimplement FlashRoute in Rust, a modern system programming language, and nam
 Compared to the original implementation, the main features of *flashroute.rs* are:
 - Safer and extensible low-level network communication through *pnet*, instead of bare socket API.
 - Asynchronous tasks and coroutine scheduling, instead of explicit thread management.
+- More utilization of multi-core processors brings probing performance improvements of up to **25%** (tested on AMD EPYC 7B12 (8) @ 2.25 GHz).
 - More comprehensive thread-safety thanks to the borrow checker of Rust.
-- No mutex or rwlock. All inter-task communications are achieved through message channels or atomic operations.
+- Mutex or rwlock free. All inter-task communications are achieved through message channels or atomic operations.
+- `grain` option and hashmap-based data structure allows richer probing patterns.
 - Produce human-readable results and even [visualization](./res/fr.png) of network topology.
 
 ## Usage
@@ -42,6 +44,13 @@ Compared to the original implementation, the main features of *flashroute.rs* ar
     ```shell
     cargo run --release -- path/to/file --grain 8
     ```
+- Follow the behavior of the original FlashRoute and only count the internet routers:
+    ```shell
+    cargo run --release -- 0.0.0.0/0 --grain 8 --router-only
+    ```
+Most of the options of original implementation are provided too, run `cargo run -- --help` to see all possible options.
+
+### Notes
 
 Listening on ICMP socket requires superuser permission, the *flashroute.rs* may automatically restart in sudo mode.
 
