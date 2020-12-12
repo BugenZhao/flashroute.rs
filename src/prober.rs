@@ -49,7 +49,7 @@ impl Prober {
         &self,
         destination: ProbeUnit,
         source_ip: Ipv4Addr,
-        buffer: &mut [u8; Self::PACK_BUFFER_LENGTH],
+        buffer: &mut [u8],
     ) -> usize {
         let (dst_ip, ttl) = destination;
         let timestamp = crate::utils::timestamp_ms_u16();

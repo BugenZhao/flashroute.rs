@@ -84,6 +84,21 @@ impl NetworkManager {
         let (mut sender, _) = transport_channel(0, protocol)?;
         let local_ip = OPT.local_addr;
 
+        let (net_send_tx, mut net_send_rx) = mpsc::channel::<Ipv4Packet>(10000);
+
+        tokio::spawn(async move {
+            loop {
+                if let Some(packet) = net_send_rx.recv().await {
+                    if !OPT.dry_run {
+                        let dst = packet.get_destination();
+                        let _ = sender.send_to(packet, IpAddr::V4(dst));
+                    }
+                } else {
+                    break;
+                }
+            }
+        });
+
         tokio::spawn(async move {
             log::info!("[{:?}] sending task started", prober.phase);
 
@@ -110,13 +125,11 @@ impl NetworkManager {
                             }
                         }
 
-                        let mut buf = [0u8; Prober::PACK_BUFFER_LENGTH];
+                        let mut buf = vec![0u8; Prober::PACK_BUFFER_LENGTH];
                         let len = prober.pack(dst_unit, local_ip, &mut buf);
-                        let packet = Ipv4Packet::new(&buf[..len]).unwrap();
-
-                        if !OPT.dry_run {
-                            let _ = sender.send_to(packet, IpAddr::V4(dst_unit.0));
-                        }
+                        buf.resize(len, 0);
+                        let packet = Ipv4Packet::owned(buf).unwrap();
+                        let _ = net_send_tx.send(packet).await;
 
                         log::trace!("PROBE: {:?}", dst_unit);
 
