@@ -47,6 +47,7 @@ pub struct Tracerouter {
 
     backward_count: AtomicU64,
     forward_count: AtomicU64,
+    total_count: AtomicU64,
 }
 
 impl Tracerouter {
@@ -170,9 +171,10 @@ impl Tracerouter {
             end_time.duration_since(start_time).unwrap().as_secs()
         );
         log::info!(
-            "[Summary] Interfaces: forward {}, backward {}",
+            "[Summary] Interfaces: forward {}, backward {}, total {}",
             self.forward_count.load(SeqCst),
             self.backward_count.load(SeqCst),
+            self.total_count.load(SeqCst),
         );
 
         Ok(topo)
@@ -368,11 +370,15 @@ impl Tracerouter {
         }
         nm.stop();
         let _ = stop_tx.send(());
-        let (backward_set, forward_set) = callback_task.await.unwrap();
+
+        log::info!("Generating statistics and topology...");
+        let (mut backward_set, forward_set) = callback_task.await.unwrap();
 
         // stats
         self.backward_count.store(backward_set.len() as u64, SeqCst);
         self.forward_count.store(forward_set.len() as u64, SeqCst);
+        backward_set.extend(forward_set.iter());
+        self.total_count.store(backward_set.len() as u64, SeqCst);
 
         self.sent_probes.fetch_add(nm.sent_packets(), SeqCst);
         self.recv_responses_main
@@ -410,7 +416,9 @@ impl Tracerouter {
                 }
             } else {
                 // from destination
-                backward_stop_set.insert(result.responder);
+                if !OPT.router_only {
+                    backward_stop_set.insert(result.responder);
+                }
                 dcb.stop_forward();
             }
         }
