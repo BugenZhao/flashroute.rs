@@ -51,9 +51,11 @@ impl Topo {
                 }
             }
             for (a, b) in results.iter().zip(results.iter().skip(1)) {
-                let dist = b.distance - a.distance;
-                graph.add_node(b.responder);
-                graph.add_edge(a.responder, b.responder, dist);
+                if a.responder != b.responder {
+                    let dist = b.distance - a.distance;
+                    graph.add_node(b.responder);
+                    graph.add_edge(a.responder, b.responder, dist);
+                }
             }
         };
 

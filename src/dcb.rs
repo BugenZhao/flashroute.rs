@@ -3,6 +3,8 @@ use std::{
     sync::atomic::{AtomicBool, AtomicU8, Ordering::SeqCst},
 };
 
+use crate::OPT;
+
 #[derive(Debug)]
 pub struct DstCtrlBlock {
     pub addr: Ipv4Addr,
@@ -95,7 +97,13 @@ impl DstCtrlBlock {
     }
 
     pub fn stop_backward(&self) {
-        self.next_backward_hop.fetch_min(0, SeqCst);
+        if OPT.plot_optimized {
+            if self.backward_count.load(SeqCst) >= 2 {
+                self.next_backward_hop.fetch_min(0, SeqCst);
+            }
+        } else {
+            self.next_backward_hop.fetch_min(0, SeqCst);
+        }
     }
 
     pub fn stop_forward(&self) {

@@ -49,6 +49,8 @@ pub struct Opt {
     pub layout: String,
     #[structopt(long = "no-spline", parse(from_flag = std::ops::Not::not))]
     pub spline: bool,
+    #[structopt(short = "p", long)]
+    pub plot_optimized: bool,
 
     // Misc
     #[structopt(long, default_value = "114514")]
@@ -99,6 +101,9 @@ pub fn get_opt() -> Opt {
     if opt.probing_rate == 0 {
         log::warn!("Probing rate is 0, rate limit will be turned off.");
         opt.probing_rate = u64::MAX;
+    }
+    if opt.plot_optimized {
+        opt.redundancy_removal = false;
     }
     opt
 }
