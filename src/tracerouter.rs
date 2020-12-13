@@ -405,7 +405,7 @@ impl Tracerouter {
                 } else {
                     // o-X-o-S-o-o-o-D
                     let new = backward_stop_set.insert(result.responder);
-                    if !new {
+                    if !new && OPT.redundancy_removal {
                         log::trace!("STOP for {}", dcb.addr);
                         dcb.stop_backward();
                     }

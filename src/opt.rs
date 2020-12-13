@@ -23,6 +23,8 @@ pub struct Opt {
     pub probing_rate: u64,
     #[structopt(long)]
     pub router_only: bool,
+    #[structopt(long = "no-redundancy-removal", parse(from_flag = std::ops::Not::not))]
+    pub redundancy_removal: bool,
 
     // Connection
     #[structopt(long, parse(try_from_str = utils::get_interface), default_value = "")]
