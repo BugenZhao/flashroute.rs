@@ -14,9 +14,10 @@ The original FlashRoute is written in C++14 with Boost and Abseil libraries, whi
 We reimplement FlashRoute in Rust, a modern system programming language, and name it as *flashroute.rs*.
 
 Compared to the original implementation, the main features of *flashroute.rs* are:
+- 50% LoC compared to the orginal C++ implementation.
 - Safer and extensible low-level network communication through *pnet*, instead of bare socket API.
 - Asynchronous tasks and coroutine scheduling, instead of explicit thread management.
-- More utilization of multi-core processors brings probing performance improvements of up to **25%** (tested on AMD EPYC 7B12 (8) @ 2.25 GHz).
+- More utilization of multi-core processors brings probing performance improvements of up to **40%** (tested on AMD EPYC 7B12 (8) @ 2.25 GHz).
 - More comprehensive thread-safety thanks to the borrow checker of Rust.
 - Mutex or rwlock free. All inter-task communications are achieved through message channels or atomic operations.
 - `grain` option and hashmap-based data structure allows richer probing patterns.
