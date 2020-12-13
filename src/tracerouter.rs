@@ -419,7 +419,9 @@ impl Tracerouter {
                 if !OPT.router_only {
                     backward_stop_set.insert(result.responder);
                 }
-                dcb.stop_forward();
+                if OPT.redundancy_removal {
+                    dcb.stop_forward();
+                }
             }
         }
     }
