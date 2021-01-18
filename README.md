@@ -1,6 +1,8 @@
 # flashroute.rs
 
-A reproduction of [paper](https://dl.acm.org/doi/10.1145/3419394.3423619) "*FlashRoute: Efficient Traceroute on a Massive Scale*" (ACM IMC'20) in Rust.
+A reproduction and enhancement of [paper](https://dl.acm.org/doi/10.1145/3419394.3423619) "*FlashRoute: Efficient Traceroute on a Massive Scale*" (ACM IMC'20) in Rust. [[Slides]](res/slides.pdf) [[Report]](res/report.pdf)
+
+![fr](res/fr_report.png)
 
 ## FlashRoute
 > FlashRoute is a tool to discover network topology, which is specially optimized for full Internet topology discovery. 
@@ -21,7 +23,7 @@ Compared to the original implementation, the main features of *flashroute.rs* ar
 - More comprehensive thread-safety thanks to the borrow checker of Rust.
 - Mutex or rwlock free. All inter-task communications are achieved through message channels or atomic operations.
 - `grain` option and hashmap-based data structure allows richer probing patterns.
-- Produce human-readable results and even [visualization](./res/fr.png) of network topology.
+- Produce human-readable results and even [visualization](res/fr_huge.png) of network topology.
 
 ## Usage
 *flashroute.rs* requires Rust stable toolchain (>= 1.48.0). 
