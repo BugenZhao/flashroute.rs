@@ -5,6 +5,7 @@ use crate::error::*;
 use crate::utils;
 
 #[derive(Debug, StructOpt)]
+#[structopt(about)]
 pub struct Opt {
     // Preprobing
     #[structopt(long, default_value = "32")]

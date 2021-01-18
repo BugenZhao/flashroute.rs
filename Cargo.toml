@@ -1,6 +1,7 @@
 [package]
 name = "flashroute_rs"
-version = "0.2.4"
+description = "A reproduction and enhancement of `FlashRoute: Efficient Traceroute on a Massive Scale (ACM IMC'20)` in Rust."
+version = "0.2.5"
 authors = [
     "Bugen Zhao <i@bugenzhao.com>",
     "Zhengdong Wang <lnwzd2009@sjtu.edu.cn>",
