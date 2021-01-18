@@ -35,7 +35,6 @@ type OneshotTx<T> = oneshot::Sender<T>;
 type OneshotRx<T> = oneshot::Receiver<T>;
 
 pub struct NetworkManager {
-    prober: Arc<Prober>,
     sent_packets: Arc<AtomicU64>,
     recv_packets: Arc<AtomicU64>,
     send_tx: BMpscTx<ProbeUnit>,
@@ -65,7 +64,6 @@ impl NetworkManager {
         )?;
 
         Ok(Self {
-            prober,
             sent_packets,
             recv_packets,
             send_tx,
