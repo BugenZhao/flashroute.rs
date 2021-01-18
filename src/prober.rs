@@ -26,7 +26,6 @@ pub enum ProbePhase {
 #[derive(Debug)]
 pub struct Prober {
     pub phase: ProbePhase,
-    encode_timestamp: bool,
 }
 
 impl Prober {
@@ -34,28 +33,20 @@ impl Prober {
     const ICMP_HEADER_LENGTH: u16 = 8;
     pub const PACK_BUFFER_LENGTH: usize = 256;
 
-    pub fn new(phase: ProbePhase, encode_timestamp: bool) -> Self {
-        Self {
-            phase,
-            encode_timestamp,
-        }
+    pub fn new(phase: ProbePhase) -> Self {
+        Self { phase }
     }
 }
 
 pub type ProbeUnit = (Ipv4Addr, u8);
 
 impl Prober {
-    pub fn pack(
-        &self,
-        destination: ProbeUnit,
-        source_ip: Ipv4Addr,
-        buffer: &mut [u8],
-    ) -> usize {
+    pub fn pack(&self, destination: ProbeUnit, source_ip: Ipv4Addr, buffer: &mut [u8]) -> usize {
         let (dst_ip, ttl) = destination;
         let timestamp = crate::utils::timestamp_ms_u16();
         let expect_total_size = {
             let mut size = 128;
-            if self.encode_timestamp {
+            if OPT.encode_timestamp {
                 size |= ((timestamp >> 10) & 0x3F) << 1;
             }
             size
@@ -72,7 +63,7 @@ impl Prober {
         let mut ip_packet = MutableIpv4Packet::new(buffer).unwrap();
         let ip_id = {
             let mut id = (ttl as u16 & 0x1F) | ((self.phase as u16 & 0x1) << 5);
-            if self.encode_timestamp {
+            if OPT.encode_timestamp {
                 id |= (timestamp & 0x3FF) << 6;
             }
             id
@@ -141,7 +132,7 @@ impl Prober {
             }
         };
 
-        let rtt = if self.encode_timestamp {
+        let rtt = if OPT.encode_timestamp {
             let send = if cfg!(target_vendor = "apple") {
                 // byte order fix
                 ((res_ip_packet.get_identification() >> 6) & 0x3FF)
@@ -203,7 +194,7 @@ mod test {
 
     #[test]
     fn test_parse() {
-        let prober = Prober::new(ProbePhase::Pre, true);
+        let prober = Prober::new(ProbePhase::Pre);
         {
             let result = prober.parse(TLE_WITH_DATA.packet(), true).unwrap();
             println!("{:#?}", result);

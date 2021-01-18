@@ -26,6 +26,3 @@ pbr = "1.0"
 
 [target.'cfg(unix)'.dependencies]
 sudo = "0.5"
-
-[profile.release]
-lto = "fat"

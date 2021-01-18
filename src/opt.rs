@@ -25,6 +25,8 @@ pub struct Opt {
     pub router_only: bool,
     #[structopt(long = "no-redundancy-removal", parse(from_flag = std::ops::Not::not))]
     pub redundancy_removal: bool,
+    #[structopt(long = "no-encode-timestamp", parse(from_flag = std::ops::Not::not))]
+    pub encode_timestamp: bool,
 
     // Connection
     #[structopt(long, parse(try_from_str = utils::get_interface), default_value = "")]
