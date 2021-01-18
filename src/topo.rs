@@ -1,8 +1,10 @@
 use std::{collections::HashMap, net::Ipv4Addr};
 
-use petgraph::graphmap::UnGraphMap;
+use petgraph::{dot::Dot, graphmap::UnGraphMap};
+use tokio::io::AsyncWriteExt;
 use tokio::sync::mpsc;
 
+use crate::error::*;
 use crate::{prober::ProbeDebugResult, prober::ProbeResult, OPT};
 
 type MpscTx<T> = mpsc::UnboundedSender<T>;
@@ -77,5 +79,51 @@ impl Topo {
         }
 
         self.graph
+    }
+
+    pub async fn process_graph(topo_graph: TopoGraph) -> Result<()> {
+        log::info!("[Summary] Total probed hosts: {}", topo_graph.node_count());
+
+        if OPT.dot {
+            let dot_content =
+                Dot::with_config(&topo_graph, &[petgraph::dot::Config::GraphContentOnly]);
+
+            let dot_path = OPT.output_dot.to_str().unwrap();
+            let viz_path = OPT.output_viz.to_str().unwrap();
+            let mut dot_file = tokio::fs::File::create(dot_path).await?;
+
+            macro_rules! write {
+                ($str:expr) => {
+                    dot_file.write($str.as_bytes()).await?;
+                };
+            }
+
+            log::info!("Saving topology to {}...", dot_path);
+            write!("graph {\n    overlap = false;\n");
+            if OPT.spline {
+                write!("    splines = true;\n");
+            }
+            for s in format!("{}", dot_content).lines() {
+                write!(s);
+                write!("\n");
+            }
+            write!("}\n");
+
+            if OPT.plot {
+                log::info!("Plotting to {}...", viz_path);
+                tokio::process::Command::new("dot")
+                    .arg("-K")
+                    .arg(OPT.layout.as_str())
+                    .arg("-Tpng")
+                    .arg(dot_path)
+                    .arg("-o")
+                    .arg(viz_path)
+                    .spawn()?
+                    .wait()
+                    .await?;
+            }
+        }
+
+        Ok(())
     }
 }

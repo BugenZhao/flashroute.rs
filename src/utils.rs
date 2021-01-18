@@ -3,11 +3,9 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use petgraph::dot::Dot;
 use pnet::datalink::NetworkInterface;
-use tokio::io::AsyncWriteExt;
 
-use crate::{error::*, topo::TopoGraph, OPT};
+use crate::error::*;
 
 pub fn get_interface_ipv4_addr(ni: &NetworkInterface) -> Option<Ipv4Addr> {
     for ip in ni.ips.iter().map(|net| net.ip()) {
@@ -45,51 +43,6 @@ pub fn timestamp_ms_u16() -> u16 {
 
 pub fn ip_checksum(addr: Ipv4Addr, salt: u16) -> u16 {
     pnet::util::checksum(&addr.octets(), 0) + salt
-}
-
-pub async fn process_topo(topo: TopoGraph) -> Result<()> {
-    log::info!("[Summary] Total probed hosts: {}", topo.node_count());
-
-    if OPT.dot {
-        let dot_content = Dot::with_config(&topo, &[petgraph::dot::Config::GraphContentOnly]);
-
-        let dot_path = OPT.output_dot.to_str().unwrap();
-        let viz_path = OPT.output_viz.to_str().unwrap();
-        let mut dot_file = tokio::fs::File::create(dot_path).await?;
-
-        macro_rules! write {
-            ($str:expr) => {
-                dot_file.write($str.as_bytes()).await?;
-            };
-        }
-
-        log::info!("Saving topology to {}...", dot_path);
-        write!("graph {\n    overlap = false;\n");
-        if OPT.spline {
-            write!("    splines = true;\n");
-        }
-        for s in format!("{}", dot_content).lines() {
-            write!(s);
-            write!("\n");
-        }
-        write!("}\n");
-
-        if OPT.plot {
-            log::info!("Plotting to {}...", viz_path);
-            tokio::process::Command::new("dot")
-                .arg("-K")
-                .arg(OPT.layout.as_str())
-                .arg("-Tpng")
-                .arg(dot_path)
-                .arg("-o")
-                .arg(viz_path)
-                .spawn()?
-                .wait()
-                .await?;
-        }
-    }
-
-    Ok(())
 }
 
 pub fn ensure_su() {

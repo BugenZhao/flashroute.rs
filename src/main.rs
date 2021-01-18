@@ -16,8 +16,8 @@ use std::sync::Arc;
 
 use error::Result;
 use opt::Opt;
+use topo::Topo;
 use tracerouter::Tracerouter;
-use utils::process_topo;
 
 lazy_static! {
     static ref OPT: Opt = if cfg!(test) {
@@ -27,8 +27,7 @@ lazy_static! {
     };
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn init() {
     env_logger::builder()
         .filter_level(if OPT.debug {
             log::LevelFilter::Debug
@@ -48,16 +47,21 @@ async fn main() -> Result<()> {
         "{} is built in DEBUG mode, thus may perform quite poorly.",
         env!("CARGO_PKG_NAME")
     );
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    init();
 
     let tr = Arc::new(Tracerouter::new()?);
-    let r = tr.clone();
+    let running = tr.clone();
     tokio::spawn(async move {
         tokio::signal::ctrl_c().await.unwrap();
-        r.stop();
+        running.stop();
     });
 
     let topo = tr.run().await?;
-    process_topo(topo).await?;
+    Topo::process_graph(topo).await?;
 
     #[cfg(windows)]
     std::process::exit(0);
