@@ -191,7 +191,7 @@ impl Tracerouter {
 
 impl Tracerouter {
     async fn run_preprobing_task(&self) -> Result<()> {
-        let prober = Prober::new(ProbePhase::Pre, true);
+        let prober = Prober::new(ProbePhase::Pre);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
         let mut nm = NetworkManager::new(prober, recv_tx)?;
         let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
@@ -276,7 +276,7 @@ impl Tracerouter {
 
 impl Tracerouter {
     async fn run_probing_task(&self) -> Result<TopoGraph> {
-        let prober = Prober::new(ProbePhase::Main, true);
+        let prober = Prober::new(ProbePhase::Main);
         let (recv_tx, mut recv_rx) = mpsc::unbounded_channel();
         let mut nm = NetworkManager::new(prober, recv_tx)?;
         let (stop_tx, mut stop_rx) = oneshot::channel::<()>();
