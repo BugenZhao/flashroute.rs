@@ -1,0 +1,81 @@
+[2020-12-12T20:42:35Z INFO  flashroute_rs] Opt { preprobing_ttl: 32, proximity_span: 5, split_ttl: 16, max_ttl: 32, gap: 4, probing_rate: 400000, two: false, router_only: true, interface: NetworkInterface { name: "ens4", description: "", index: 2, mac: Some(42:01:0a:80:00:02), ips: [V4(Ipv4Network { addr: 10.128.0.2, prefix: 32 }), V6(Ipv6Network { addr: fe80::4001:aff:fe80:2, prefix: 64 })], flags: 69699 }, dst_port: 33434, payload_message: "How are you?", dot: false, plot: true, output_dot: "fr.dot", output_viz: "fr.png", layout: "neato", spline: true, seed: 114514, salt: 0, dry_run: false, dump_targets: None, debug: false, grain: 8, targets: List("list_0_8.txt"), global_only: false, allow_private: false, local_addr: 10.128.0.2 }
+[2020-12-12T20:42:35Z INFO  flashroute_rs::tracerouter] Using interface `ens4` (10.128.0.2)
+[2020-12-12T20:42:35Z INFO  flashroute_rs::tracerouter] Initializing targets...
+[2020-12-12T20:42:42Z INFO  flashroute_rs::tracerouter] Imported 15510524 targets from file
+[2020-12-12T20:42:42Z INFO  flashroute_rs::network] [Pre] sending task started
+[2020-12-12T20:42:42Z INFO  flashroute_rs::network] [Pre] receiving task started
+[2020-12-12T20:42:57Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:43:11Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:43:37Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:43:53Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:43:58Z INFO  flashroute_rs::tracerouter] [Pre] Waiting for 3 secs...
+[2020-12-12T20:44:01Z INFO  flashroute_rs::network] [Pre] sending task stopped
+[2020-12-12T20:44:01Z INFO  flashroute_rs::network] [Pre] receiving task stopped
+[2020-12-12T20:44:01Z INFO  flashroute_rs::tracerouter] Preprobed: 2613411
+[2020-12-12T20:44:01Z INFO  flashroute_rs::network] [Main] sending task started
+[2020-12-12T20:44:01Z INFO  flashroute_rs::network] [Main] receiving task started
+[2020-12-12T20:44:26Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:44:32Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:45:12Z INFO  flashroute_rs::tracerouter] round   1: total 15510524, complete        0, remain 15510524;  sent 15112361, recv  1175840
+[2020-12-12T20:45:22Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:45:56Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:46:26Z INFO  flashroute_rs::tracerouter] round   2: total 15510524, complete     7174, remain 15503350;  sent 30812704, recv  2687399
+[2020-12-12T20:46:52Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:47:18Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:47:25Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:47:42Z INFO  flashroute_rs::tracerouter] round   3: total 15503350, complete   220009, remain 15283341;  sent 46273179, recv  4052909
+[2020-12-12T20:48:14Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:48:21Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:48:39Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:48:54Z INFO  flashroute_rs::tracerouter] round   4: total 15283341, complete   170514, remain 15112827;  sent 61491869, recv  5179462
+[2020-12-12T20:48:55Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:49:24Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:49:39Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:49:51Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:49:57Z INFO  flashroute_rs::tracerouter] round   5: total 15112827, complete   113019, remain 14999808;  sent 76567340, recv  6223284
+[2020-12-12T20:50:25Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:50:45Z INFO  flashroute_rs::tracerouter] round   6: total 14999808, complete  2990184, remain 12009624;  sent 88579892, recv  7194405
+[2020-12-12T20:51:21Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:51:30Z INFO  flashroute_rs::tracerouter] round   7: total 12009624, complete   929014, remain 11080610;  sent 99661460, recv  8223465
+[2020-12-12T20:51:54Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:52:12Z INFO  flashroute_rs::tracerouter] round   8: total 11080610, complete   955002, remain 10125608;  sent 109787548, recv  9268738
+[2020-12-12T20:52:50Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:52:52Z INFO  flashroute_rs::tracerouter] round   9: total 10125608, complete   994801, remain  9130807;  sent 118919045, recv 10474710
+[2020-12-12T20:53:24Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:53:27Z INFO  flashroute_rs::tracerouter] round  10: total  9130807, complete  1134231, remain  7996576;  sent 126914592, recv 11529852
+[2020-12-12T20:54:00Z INFO  flashroute_rs::tracerouter] round  11: total  7996576, complete   979998, remain  7016578;  sent 133931296, recv 12374226
+[2020-12-12T20:54:20Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:54:30Z INFO  flashroute_rs::tracerouter] round  12: total  7016578, complete   742291, remain  6274287;  sent 140205648, recv 13135238
+[2020-12-12T20:54:54Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:54:57Z INFO  flashroute_rs::tracerouter] round  13: total  6274287, complete   685663, remain  5588624;  sent 145794378, recv 13541142
+[2020-12-12T20:55:23Z INFO  flashroute_rs::tracerouter] round  14: total  5588624, complete   286937, remain  5301687;  sent 151096093, recv 13867481
+[2020-12-12T20:55:49Z INFO  flashroute_rs::tracerouter] round  15: total  5301687, complete   242263, remain  5059424;  sent 156155296, recv 14128543
+[2020-12-12T20:55:50Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:56:13Z INFO  flashroute_rs::tracerouter] round  16: total  5059424, complete   160533, remain  4898891;  sent 161054237, recv 14250981
+[2020-12-12T20:56:14Z INFO  flashroute_rs::tracerouter] round  17: total  4898891, complete  4777105, remain   121786;  sent 161264620, recv 14255786
+[2020-12-12T20:56:15Z INFO  flashroute_rs::tracerouter] round  18: total   121786, complete    67126, remain    54660;  sent 161493578, recv 14263714
+[2020-12-12T20:56:16Z INFO  flashroute_rs::tracerouter] round  19: total    54660, complete    15088, remain    39572;  sent 161669894, recv 14417889
+[2020-12-12T20:56:17Z INFO  flashroute_rs::tracerouter] round  20: total    39572, complete     8961, remain    30611;  sent 161700505, recv 14439561
+[2020-12-12T20:56:18Z INFO  flashroute_rs::tracerouter] round  21: total    30611, complete     5719, remain    24892;  sent 161725397, recv 14459558
+[2020-12-12T20:56:19Z INFO  flashroute_rs::tracerouter] round  22: total    24892, complete     5309, remain    19583;  sent 161744980, recv 14473534
+[2020-12-12T20:56:20Z INFO  flashroute_rs::tracerouter] round  23: total    19583, complete     5605, remain    13978;  sent 161758958, recv 14485048
+[2020-12-12T20:56:21Z INFO  flashroute_rs::tracerouter] round  24: total    13978, complete     4622, remain     9356;  sent 161768314, recv 14491768
+[2020-12-12T20:56:22Z INFO  flashroute_rs::tracerouter] round  25: total     9356, complete     3315, remain     6041;  sent 161774355, recv 14496867
+[2020-12-12T20:56:23Z INFO  flashroute_rs::tracerouter] round  26: total     6041, complete     2311, remain     3730;  sent 161778085, recv 14499806
+[2020-12-12T20:56:23Z WARN  flashroute_rs::network] error occurred while parsing: parse error at stage 4
+[2020-12-12T20:56:24Z INFO  flashroute_rs::tracerouter] round  27: total     3730, complete     1528, remain     2202;  sent 161780287, recv 14501606
+[2020-12-12T20:56:25Z INFO  flashroute_rs::tracerouter] round  28: total     2202, complete     1055, remain     1147;  sent 161781434, recv 14502478
+[2020-12-12T20:56:26Z INFO  flashroute_rs::tracerouter] round  29: total     1147, complete      648, remain      499;  sent 161781933, recv 14502852
+[2020-12-12T20:56:27Z INFO  flashroute_rs::tracerouter] round  30: total      499, complete      250, remain      249;  sent 161782182, recv 14503011
+[2020-12-12T20:56:28Z INFO  flashroute_rs::tracerouter] round  31: total      249, complete       95, remain      154;  sent 161782336, recv 14503118
+[2020-12-12T20:56:29Z INFO  flashroute_rs::tracerouter] round  32: total      154, complete       81, remain       73;  sent 161782409, recv 14503199
+[2020-12-12T20:56:29Z INFO  flashroute_rs::tracerouter] round  33: total       73, complete       71, remain        2;  sent 161782411, recv 14503199
+[2020-12-12T20:56:29Z INFO  flashroute_rs::tracerouter] round  34: total        2, complete        2, remain        0;  sent 161782411, recv 14503199
+[2020-12-12T20:56:29Z INFO  flashroute_rs::tracerouter] [Main] Waiting for 5 secs...
+[2020-12-12T20:56:34Z INFO  flashroute_rs::tracerouter] Generating statistics and topology...
+[2020-12-12T20:56:34Z INFO  flashroute_rs::network] [Main] sending task stopped
+[2020-12-12T20:56:34Z INFO  flashroute_rs::network] [Main] receiving task stopped
+[2020-12-12T20:56:50Z INFO  flashroute_rs::tracerouter] [Summary] Pre: sent 15510524, recv 637225;  Main: sent 161782411, recv 14503412
+[2020-12-12T20:56:50Z INFO  flashroute_rs::tracerouter] [Summary] Elapsed: 847 secs
+[2020-12-12T20:56:50Z INFO  flashroute_rs::tracerouter] [Summary] Interfaces: forward 245630, backward 770302, total 834278
+[2020-12-12T20:56:50Z INFO  flashroute_rs::utils] [Summary] Total probed hosts: 1325528

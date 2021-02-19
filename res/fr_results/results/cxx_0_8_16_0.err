@@ -1,0 +1,185 @@
+I1212 20:56:50.799664 26927 traceroute.cc:90] Internal recording disabled.
+I1212 20:56:50.799715 26927 traceroute.cc:267] The target network is from 0.0.0.0 to 255.255.255.255.
+I1212 20:56:55.803558 26927 blacklist.cc:24] Blacklist disabled.
+I1212 20:56:55.862440 26927 blacklist.cc:53] 2315269 reserved addresses have been removed.
+I1212 20:56:55.862486 26927 hitlist.cc:23] Load hitlist from file: list_0_8.txt
+I1212 20:56:59.965831 26927 hitlist.cc:34] 15510524 load addresses from hitlist.
+I1212 20:57:04.486585 26928 traceroute.cc:161] Temporary no metrics.
+I1212 20:57:04.486913 26927 traceroute.cc:394] Start preprobing.
+I1212 20:57:14.486855 26928 traceroute.cc:147] R: 0 S: 195.95k R: 10.08k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:57:19.487092 26928 traceroute.cc:147] R: 0 S: 197.86k R: 10.77k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:57:24.487320 26928 traceroute.cc:147] R: 0 S: 198.02k R: 10.71k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:57:29.487609 26928 traceroute.cc:147] R: 0 S: 189.93k R: 10.46k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:57:34.487835 26928 traceroute.cc:147] R: 0 S: 208.25k R: 10.73k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:57:39.488035 26928 traceroute.cc:147] R: 0 S: 195.21k R: 10.38k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:57:44.488266 26928 traceroute.cc:147] R: 0 S: 187.61k R:  9.54k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:57:49.488461 26928 traceroute.cc:147] R: 0 S: 188.09k R: 10.21k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:57:54.488795 26928 traceroute.cc:147] R: 0 S: 186.64k R: 10.38k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:57:59.489019 26928 traceroute.cc:147] R: 0 S: 181.85k R:  9.79k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:58:04.489239 26928 traceroute.cc:147] R: 0 S: 194.04k R: 10.30k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:58:09.489426 26928 traceroute.cc:147] R: 0 S: 179.15k R:  9.15k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:58:14.489626 26928 traceroute.cc:147] R: 0 S: 172.98k R:  8.75k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:58:19.489831 26928 traceroute.cc:147] R: 0 S: 184.44k R:  9.24k PreP:   inf RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:58:22.166534 26927 traceroute.cc:411] Preprobing finished (Took 77 seconds).
+I1212 20:58:24.394008 26927 traceroute.cc:422] Preprobed: 2618339.
+I1212 20:58:24.490092 26928 traceroute.cc:147] R: 0 S: 58.78k R:  3.67k PreP: 18.11 RmnP: 86.20 IfCnt: 0 FwIfCnt: 0
+I1212 20:58:24.761581 26927 traceroute.cc:470] Start main probing.
+I1212 20:58:29.490315 26928 traceroute.cc:147] R: 1 S: 3689348814739169.50k R: 3689348814741771.00k PreP: 18.11 RmnP: 86.20 IfCnt: 24991 FwIfCnt: 2
+I1212 20:58:34.490541 26928 traceroute.cc:147] R: 1 S: 212.77k R: 18.79k PreP: 18.11 RmnP: 86.20 IfCnt: 51808 FwIfCnt: 7
+I1212 20:58:39.490747 26928 traceroute.cc:147] R: 1 S: 211.01k R: 19.21k PreP: 18.11 RmnP: 86.20 IfCnt: 74095 FwIfCnt: 7
+I1212 20:58:44.490958 26928 traceroute.cc:147] R: 1 S: 193.10k R: 17.35k PreP: 18.11 RmnP: 86.20 IfCnt: 91735 FwIfCnt: 10
+I1212 20:58:49.491175 26928 traceroute.cc:147] R: 1 S: 199.14k R: 19.37k PreP: 18.11 RmnP: 86.20 IfCnt: 109992 FwIfCnt: 11
+I1212 20:58:54.491397 26928 traceroute.cc:147] R: 1 S: 187.40k R: 16.78k PreP: 18.11 RmnP: 86.20 IfCnt: 124035 FwIfCnt: 14
+I1212 20:58:59.491590 26928 traceroute.cc:147] R: 1 S: 185.18k R: 16.28k PreP: 18.11 RmnP: 86.20 IfCnt: 136724 FwIfCnt: 17
+I1212 20:59:04.491789 26928 traceroute.cc:147] R: 1 S: 182.75k R: 16.09k PreP: 18.11 RmnP: 86.20 IfCnt: 148523 FwIfCnt: 18
+I1212 20:59:09.491974 26928 traceroute.cc:147] R: 1 S: 165.91k R: 15.26k PreP: 18.11 RmnP: 86.20 IfCnt: 158955 FwIfCnt: 18
+I1212 20:59:14.492164 26928 traceroute.cc:147] R: 1 S: 187.58k R: 17.42k PreP: 18.11 RmnP: 86.20 IfCnt: 170723 FwIfCnt: 20
+I1212 20:59:19.492377 26928 traceroute.cc:147] R: 1 S: 169.75k R: 15.41k PreP: 18.11 RmnP: 86.20 IfCnt: 180731 FwIfCnt: 22
+I1212 20:59:24.492594 26928 traceroute.cc:147] R: 1 S: 174.54k R: 16.19k PreP: 18.11 RmnP: 86.20 IfCnt: 190715 FwIfCnt: 22
+I1212 20:59:29.492820 26928 traceroute.cc:147] R: 1 S: 175.49k R: 15.49k PreP: 18.11 RmnP: 86.20 IfCnt: 199872 FwIfCnt: 23
+I1212 20:59:34.493201 26928 traceroute.cc:147] R: 1 S: 209.06k R: 18.02k PreP: 18.11 RmnP: 86.20 IfCnt: 209886 FwIfCnt: 25
+I1212 20:59:39.493391 26928 traceroute.cc:147] R: 2 S: 209.16k R: 18.34k PreP: 18.11 RmnP: 86.20 IfCnt: 219720 FwIfCnt: 27
+I1212 20:59:44.493592 26928 traceroute.cc:147] R: 2 S: 195.33k R: 19.71k PreP: 18.11 RmnP: 86.07 IfCnt: 238413 FwIfCnt: 29
+I1212 20:59:49.493815 26928 traceroute.cc:147] R: 2 S: 179.25k R: 18.00k PreP: 18.11 RmnP: 85.90 IfCnt: 257788 FwIfCnt: 33
+I1212 20:59:54.494062 26928 traceroute.cc:147] R: 2 S: 188.38k R: 18.68k PreP: 18.11 RmnP: 85.71 IfCnt: 275391 FwIfCnt: 33
+I1212 20:59:59.494324 26928 traceroute.cc:147] R: 2 S: 194.50k R: 18.57k PreP: 18.11 RmnP: 85.49 IfCnt: 291570 FwIfCnt: 35
+I1212 21:00:04.494549 26928 traceroute.cc:147] R: 2 S: 191.93k R: 19.47k PreP: 18.11 RmnP: 85.24 IfCnt: 306722 FwIfCnt: 35
+I1212 21:00:09.494782 26928 traceroute.cc:147] R: 2 S: 173.72k R: 16.94k PreP: 18.11 RmnP: 85.02 IfCnt: 318970 FwIfCnt: 35
+I1212 21:00:14.495043 26928 traceroute.cc:147] R: 2 S: 175.44k R: 15.74k PreP: 18.11 RmnP: 84.80 IfCnt: 329801 FwIfCnt: 35
+I1212 21:00:19.495338 26928 traceroute.cc:147] R: 2 S: 161.89k R: 14.77k PreP: 18.11 RmnP: 84.60 IfCnt: 339495 FwIfCnt: 37
+I1212 21:00:24.495537 26928 traceroute.cc:147] R: 2 S: 166.37k R: 14.93k PreP: 18.11 RmnP: 84.37 IfCnt: 348891 FwIfCnt: 37
+I1212 21:00:29.495704 26928 traceroute.cc:147] R: 2 S: 188.41k R: 17.65k PreP: 18.11 RmnP: 84.12 IfCnt: 359742 FwIfCnt: 37
+I1212 21:00:34.495887 26928 traceroute.cc:147] R: 2 S: 211.99k R: 19.11k PreP: 18.11 RmnP: 83.83 IfCnt: 371501 FwIfCnt: 40
+I1212 21:00:39.496080 26928 traceroute.cc:147] R: 2 S: 208.99k R: 19.17k PreP: 18.11 RmnP: 83.54 IfCnt: 382646 FwIfCnt: 42
+I1212 21:00:44.496279 26928 traceroute.cc:147] R: 2 S: 206.00k R: 17.87k PreP: 18.11 RmnP: 83.26 IfCnt: 392367 FwIfCnt: 43
+I1212 21:00:49.496484 26928 traceroute.cc:147] R: 2 S: 188.82k R: 15.94k PreP: 18.11 RmnP: 83.00 IfCnt: 400699 FwIfCnt: 44
+I1212 21:00:54.496693 26928 traceroute.cc:147] R: 3 S: 202.39k R: 17.57k PreP: 18.11 RmnP: 82.69 IfCnt: 409690 FwIfCnt: 44
+I1212 21:00:59.496919 26928 traceroute.cc:147] R: 3 S: 204.41k R: 20.33k PreP: 18.11 RmnP: 82.31 IfCnt: 422060 FwIfCnt: 44
+I1212 21:01:04.497174 26928 traceroute.cc:147] R: 3 S: 191.48k R: 18.84k PreP: 18.11 RmnP: 81.97 IfCnt: 431558 FwIfCnt: 44
+I1212 21:01:09.497380 26928 traceroute.cc:147] R: 3 S: 191.19k R: 18.72k PreP: 18.11 RmnP: 81.63 IfCnt: 439842 FwIfCnt: 44
+I1212 21:01:14.497575 26928 traceroute.cc:147] R: 3 S: 191.96k R: 18.69k PreP: 18.11 RmnP: 81.25 IfCnt: 447465 FwIfCnt: 45
+I1212 21:01:19.497822 26928 traceroute.cc:147] R: 3 S: 189.39k R: 19.17k PreP: 18.11 RmnP: 80.90 IfCnt: 454600 FwIfCnt: 46
+I1212 21:01:24.498035 26928 traceroute.cc:147] R: 3 S: 177.26k R: 16.20k PreP: 18.11 RmnP: 80.58 IfCnt: 460284 FwIfCnt: 46
+I1212 21:01:29.498265 26928 traceroute.cc:147] R: 3 S: 189.77k R: 17.25k PreP: 18.11 RmnP: 80.25 IfCnt: 465992 FwIfCnt: 47
+I1212 21:01:34.498502 26928 traceroute.cc:147] R: 3 S: 165.31k R: 15.08k PreP: 18.11 RmnP: 79.94 IfCnt: 470835 FwIfCnt: 50
+I1212 21:01:39.498715 26928 traceroute.cc:147] R: 3 S: 205.18k R: 19.28k PreP: 18.11 RmnP: 79.57 IfCnt: 477396 FwIfCnt: 52
+I1212 21:01:44.498900 26928 traceroute.cc:147] R: 3 S: 190.42k R: 17.16k PreP: 18.11 RmnP: 79.22 IfCnt: 482765 FwIfCnt: 53
+I1212 21:01:49.499119 26928 traceroute.cc:147] R: 3 S: 212.63k R: 19.62k PreP: 18.11 RmnP: 78.84 IfCnt: 488664 FwIfCnt: 54
+I1212 21:01:54.499305 26928 traceroute.cc:147] R: 3 S: 200.16k R: 17.27k PreP: 18.11 RmnP: 78.49 IfCnt: 493474 FwIfCnt: 55
+I1212 21:01:59.499531 26928 traceroute.cc:147] R: 3 S: 196.99k R: 16.85k PreP: 18.11 RmnP: 78.15 IfCnt: 498285 FwIfCnt: 56
+I1212 21:02:04.499706 26928 traceroute.cc:147] R: 4 S: 202.89k R: 18.03k PreP: 18.11 RmnP: 77.70 IfCnt: 504369 FwIfCnt: 56
+I1212 21:02:09.499877 26928 traceroute.cc:147] R: 4 S: 186.59k R: 16.92k PreP: 18.11 RmnP: 77.27 IfCnt: 510733 FwIfCnt: 56
+I1212 21:02:14.500053 26928 traceroute.cc:147] R: 4 S: 199.40k R: 17.65k PreP: 18.11 RmnP: 76.82 IfCnt: 516871 FwIfCnt: 56
+I1212 21:02:19.500291 26928 traceroute.cc:147] R: 4 S: 184.29k R: 15.92k PreP: 18.11 RmnP: 76.38 IfCnt: 521766 FwIfCnt: 56
+I1212 21:02:24.500499 26928 traceroute.cc:147] R: 4 S: 179.85k R: 16.76k PreP: 18.11 RmnP: 75.95 IfCnt: 526461 FwIfCnt: 57
+I1212 21:02:29.500710 26928 traceroute.cc:147] R: 4 S: 178.10k R: 15.20k PreP: 18.11 RmnP: 75.55 IfCnt: 530846 FwIfCnt: 57
+I1212 21:02:34.500896 26928 traceroute.cc:147] R: 4 S: 183.46k R: 15.54k PreP: 18.11 RmnP: 75.15 IfCnt: 534739 FwIfCnt: 57
+I1212 21:02:39.501230 26928 traceroute.cc:147] R: 4 S: 151.80k R: 12.84k PreP: 18.11 RmnP: 74.81 IfCnt: 537794 FwIfCnt: 58
+I1212 21:02:44.501431 26928 traceroute.cc:147] R: 4 S: 202.66k R: 17.67k PreP: 18.11 RmnP: 74.36 IfCnt: 541849 FwIfCnt: 58
+I1212 21:02:49.501670 26928 traceroute.cc:147] R: 4 S: 201.14k R: 17.23k PreP: 18.11 RmnP: 73.92 IfCnt: 546009 FwIfCnt: 58
+I1212 21:02:54.503325 26928 traceroute.cc:147] R: 4 S: 194.43k R: 16.94k PreP: 18.11 RmnP: 73.49 IfCnt: 549739 FwIfCnt: 58
+I1212 21:02:59.503525 26928 traceroute.cc:147] R: 4 S: 190.65k R: 15.35k PreP: 18.11 RmnP: 73.10 IfCnt: 552964 FwIfCnt: 62
+I1212 21:03:04.503696 26928 traceroute.cc:147] R: 4 S: 214.18k R: 17.36k PreP: 18.11 RmnP: 72.64 IfCnt: 556588 FwIfCnt: 62
+I1212 21:03:09.503870 26928 traceroute.cc:147] R: 5 S: 200.62k R: 17.53k PreP: 18.11 RmnP: 72.18 IfCnt: 562031 FwIfCnt: 63
+I1212 21:03:14.504070 26928 traceroute.cc:147] R: 5 S: 201.88k R: 17.74k PreP: 18.11 RmnP: 71.73 IfCnt: 567833 FwIfCnt: 63
+I1212 21:03:19.504317 26928 traceroute.cc:147] R: 5 S: 183.65k R: 16.66k PreP: 18.11 RmnP: 71.33 IfCnt: 572663 FwIfCnt: 64
+I1212 21:03:24.504536 26928 traceroute.cc:147] R: 5 S: 188.21k R: 16.92k PreP: 18.11 RmnP: 70.88 IfCnt: 577070 FwIfCnt: 64
+I1212 21:03:29.504814 26928 traceroute.cc:147] R: 5 S: 192.05k R: 17.34k PreP: 18.11 RmnP: 70.46 IfCnt: 581337 FwIfCnt: 65
+I1212 21:03:34.504992 26928 traceroute.cc:147] R: 5 S: 180.95k R: 15.57k PreP: 18.11 RmnP: 70.06 IfCnt: 584827 FwIfCnt: 66
+I1212 21:03:39.505244 26928 traceroute.cc:147] R: 5 S: 157.61k R: 13.14k PreP: 18.11 RmnP: 69.71 IfCnt: 587675 FwIfCnt: 66
+I1212 21:03:44.505432 26928 traceroute.cc:147] R: 5 S: 191.84k R: 16.74k PreP: 18.11 RmnP: 69.28 IfCnt: 591233 FwIfCnt: 66
+I1212 21:03:49.505641 26928 traceroute.cc:147] R: 5 S: 203.58k R: 17.43k PreP: 18.11 RmnP: 68.82 IfCnt: 594948 FwIfCnt: 66
+I1212 21:03:54.505829 26928 traceroute.cc:147] R: 5 S: 226.17k R: 19.33k PreP: 18.11 RmnP: 68.33 IfCnt: 598827 FwIfCnt: 66
+I1212 21:03:59.506078 26928 traceroute.cc:147] R: 5 S: 229.04k R: 18.60k PreP: 18.11 RmnP: 67.85 IfCnt: 602325 FwIfCnt: 66
+I1212 21:04:04.506278 26928 traceroute.cc:147] R: 6 S: 197.86k R: 16.54k PreP: 18.11 RmnP: 67.41 IfCnt: 605256 FwIfCnt: 67
+I1212 21:04:09.506481 26928 traceroute.cc:147] R: 6 S: 197.45k R: 17.88k PreP: 18.11 RmnP: 66.94 IfCnt: 611432 FwIfCnt: 70
+I1212 21:04:14.506709 26928 traceroute.cc:147] R: 6 S: 188.93k R: 18.24k PreP: 18.11 RmnP: 66.50 IfCnt: 616630 FwIfCnt: 70
+I1212 21:04:19.506911 26928 traceroute.cc:147] R: 6 S: 202.29k R: 18.91k PreP: 18.11 RmnP: 66.00 IfCnt: 621310 FwIfCnt: 70
+I1212 21:04:24.507125 26928 traceroute.cc:147] R: 6 S: 178.20k R: 17.28k PreP: 18.11 RmnP: 65.57 IfCnt: 625089 FwIfCnt: 71
+I1212 21:04:29.507320 26928 traceroute.cc:147] R: 6 S: 192.03k R: 17.61k PreP: 18.11 RmnP: 65.14 IfCnt: 628615 FwIfCnt: 71
+I1212 21:04:34.507526 26928 traceroute.cc:147] R: 6 S: 176.60k R: 16.23k PreP: 18.11 RmnP: 64.74 IfCnt: 631644 FwIfCnt: 71
+I1212 21:04:39.507726 26928 traceroute.cc:147] R: 6 S: 166.50k R: 15.83k PreP: 18.11 RmnP: 64.34 IfCnt: 634556 FwIfCnt: 71
+I1212 21:04:44.507910 26928 traceroute.cc:147] R: 6 S: 180.34k R: 16.83k PreP: 18.11 RmnP: 63.93 IfCnt: 637734 FwIfCnt: 71
+I1212 21:04:49.508121 26928 traceroute.cc:147] R: 6 S: 183.94k R: 17.11k PreP: 18.11 RmnP: 63.51 IfCnt: 640836 FwIfCnt: 71
+I1212 21:04:54.508282 26928 traceroute.cc:147] R: 6 S: 196.03k R: 17.16k PreP: 18.11 RmnP: 63.09 IfCnt: 643626 FwIfCnt: 71
+I1212 21:04:59.508498 26928 traceroute.cc:147] R: 7 S: 211.89k R: 18.44k PreP: 18.11 RmnP: 62.60 IfCnt: 646667 FwIfCnt: 71
+I1212 21:05:04.508934 26928 traceroute.cc:147] R: 7 S: 188.71k R: 17.80k PreP: 18.11 RmnP: 62.12 IfCnt: 652158 FwIfCnt: 71
+I1212 21:05:09.509145 26928 traceroute.cc:147] R: 7 S: 211.75k R: 21.35k PreP: 18.11 RmnP: 61.57 IfCnt: 657922 FwIfCnt: 71
+I1212 21:05:14.509349 26928 traceroute.cc:147] R: 7 S: 207.55k R: 21.02k PreP: 18.11 RmnP: 61.02 IfCnt: 662653 FwIfCnt: 71
+I1212 21:05:19.509578 26928 traceroute.cc:147] R: 7 S: 207.78k R: 20.97k PreP: 18.11 RmnP: 60.48 IfCnt: 666706 FwIfCnt: 72
+I1212 21:05:24.509797 26928 traceroute.cc:147] R: 7 S: 162.08k R: 16.03k PreP: 18.11 RmnP: 60.07 IfCnt: 669471 FwIfCnt: 72
+I1212 21:05:29.509987 26928 traceroute.cc:147] R: 7 S: 197.31k R: 19.56k PreP: 18.11 RmnP: 59.54 IfCnt: 672759 FwIfCnt: 73
+I1212 21:05:34.510335 26928 traceroute.cc:147] R: 7 S: 199.95k R: 20.19k PreP: 18.11 RmnP: 59.02 IfCnt: 676331 FwIfCnt: 73
+I1212 21:05:39.510550 26928 traceroute.cc:147] R: 7 S: 190.06k R: 18.95k PreP: 18.11 RmnP: 58.53 IfCnt: 679408 FwIfCnt: 75
+I1212 21:05:44.510740 26928 traceroute.cc:147] R: 7 S: 182.20k R: 16.91k PreP: 18.11 RmnP: 58.09 IfCnt: 682015 FwIfCnt: 76
+I1212 21:05:49.510932 26928 traceroute.cc:147] R: 8 S: 173.87k R: 16.24k PreP: 18.11 RmnP: 57.66 IfCnt: 684458 FwIfCnt: 76
+I1212 21:05:54.511126 26928 traceroute.cc:147] R: 8 S: 174.38k R: 18.23k PreP: 18.11 RmnP: 57.19 IfCnt: 688793 FwIfCnt: 77
+I1212 21:05:59.511340 26928 traceroute.cc:147] R: 8 S: 201.06k R: 22.59k PreP: 18.11 RmnP: 56.60 IfCnt: 693404 FwIfCnt: 78
+I1212 21:06:04.511546 26928 traceroute.cc:147] R: 8 S: 212.32k R: 23.81k PreP: 18.11 RmnP: 55.96 IfCnt: 697248 FwIfCnt: 80
+I1212 21:06:09.511754 26928 traceroute.cc:147] R: 8 S: 217.40k R: 24.20k PreP: 18.11 RmnP: 55.33 IfCnt: 700529 FwIfCnt: 80
+I1212 21:06:14.511946 26928 traceroute.cc:147] R: 8 S: 203.33k R: 22.95k PreP: 18.11 RmnP: 54.74 IfCnt: 703414 FwIfCnt: 82
+I1212 21:06:19.512151 26928 traceroute.cc:147] R: 8 S: 201.21k R: 23.36k PreP: 18.11 RmnP: 54.15 IfCnt: 706266 FwIfCnt: 82
+I1212 21:06:24.512358 26928 traceroute.cc:147] R: 8 S: 200.00k R: 23.18k PreP: 18.11 RmnP: 53.57 IfCnt: 709091 FwIfCnt: 82
+I1212 21:06:29.512538 26928 traceroute.cc:147] R: 8 S: 206.45k R: 21.91k PreP: 18.11 RmnP: 53.01 IfCnt: 711483 FwIfCnt: 82
+I1212 21:06:34.512759 26928 traceroute.cc:147] R: 9 S: 188.94k R: 19.97k PreP: 18.11 RmnP: 52.46 IfCnt: 713609 FwIfCnt: 83
+I1212 21:06:39.512986 26928 traceroute.cc:147] R: 9 S: 180.50k R: 25.73k PreP: 18.11 RmnP: 51.85 IfCnt: 717718 FwIfCnt: 84
+I1212 21:06:44.513170 26928 traceroute.cc:147] R: 9 S: 171.85k R: 26.13k PreP: 18.11 RmnP: 51.25 IfCnt: 720465 FwIfCnt: 84
+I1212 21:06:49.513363 26928 traceroute.cc:147] R: 9 S: 195.87k R: 28.78k PreP: 18.11 RmnP: 50.56 IfCnt: 723111 FwIfCnt: 84
+I1212 21:06:54.513586 26928 traceroute.cc:147] R: 9 S: 182.73k R: 27.14k PreP: 18.11 RmnP: 49.93 IfCnt: 725308 FwIfCnt: 84
+I1212 21:06:59.513800 26928 traceroute.cc:147] R: 9 S: 160.28k R: 23.43k PreP: 18.11 RmnP: 49.35 IfCnt: 727073 FwIfCnt: 85
+I1212 21:07:04.514008 26928 traceroute.cc:147] R: 9 S: 189.96k R: 27.94k PreP: 18.11 RmnP: 48.66 IfCnt: 729324 FwIfCnt: 85
+I1212 21:07:09.514216 26928 traceroute.cc:147] R: 9 S: 204.23k R: 29.33k PreP: 18.11 RmnP: 47.96 IfCnt: 731562 FwIfCnt: 86
+I1212 21:07:14.514427 26928 traceroute.cc:147] R: 9 S: 204.85k R: 26.86k PreP: 18.11 RmnP: 47.29 IfCnt: 733477 FwIfCnt: 86
+I1212 21:07:19.514626 26928 traceroute.cc:147] R: 10 S: 190.53k R: 27.40k PreP: 18.11 RmnP: 46.42 IfCnt: 735732 FwIfCnt: 87
+I1212 21:07:24.514819 26928 traceroute.cc:147] R: 10 S: 190.39k R: 27.90k PreP: 18.11 RmnP: 45.46 IfCnt: 738027 FwIfCnt: 87
+I1212 21:07:29.515054 26928 traceroute.cc:147] R: 10 S: 204.61k R: 29.99k PreP: 18.11 RmnP: 44.44 IfCnt: 739924 FwIfCnt: 88
+I1212 21:07:34.515251 26928 traceroute.cc:147] R: 10 S: 195.12k R: 28.29k PreP: 18.11 RmnP: 43.48 IfCnt: 741574 FwIfCnt: 89
+I1212 21:07:39.515480 26928 traceroute.cc:147] R: 10 S: 181.31k R: 26.40k PreP: 18.11 RmnP: 42.59 IfCnt: 743044 FwIfCnt: 89
+I1212 21:07:44.515743 26928 traceroute.cc:147] R: 10 S: 191.19k R: 28.75k PreP: 18.11 RmnP: 41.69 IfCnt: 744512 FwIfCnt: 89
+I1212 21:07:49.515970 26928 traceroute.cc:147] R: 10 S: 191.21k R: 25.58k PreP: 18.11 RmnP: 40.83 IfCnt: 745858 FwIfCnt: 89
+I1212 21:07:54.516168 26928 traceroute.cc:147] R: 11 S: 163.46k R: 22.69k PreP: 18.11 RmnP: 40.07 IfCnt: 747213 FwIfCnt: 90
+I1212 21:07:59.516363 26928 traceroute.cc:147] R: 11 S: 189.53k R: 23.61k PreP: 18.11 RmnP: 39.12 IfCnt: 749109 FwIfCnt: 90
+I1212 21:08:04.516548 26928 traceroute.cc:147] R: 11 S: 180.56k R: 23.17k PreP: 18.11 RmnP: 38.22 IfCnt: 750551 FwIfCnt: 90
+I1212 21:08:09.516737 26928 traceroute.cc:147] R: 11 S: 174.36k R: 21.99k PreP: 18.11 RmnP: 37.37 IfCnt: 751797 FwIfCnt: 91
+I1212 21:08:14.516937 26928 traceroute.cc:147] R: 11 S: 206.17k R: 26.15k PreP: 18.11 RmnP: 36.33 IfCnt: 753061 FwIfCnt: 91
+I1212 21:08:19.517124 26928 traceroute.cc:147] R: 11 S: 200.23k R: 25.40k PreP: 18.11 RmnP: 35.41 IfCnt: 754354 FwIfCnt: 91
+I1212 21:08:24.517328 26928 traceroute.cc:147] R: 12 S: 191.33k R: 22.10k PreP: 18.11 RmnP: 34.55 IfCnt: 755436 FwIfCnt: 92
+I1212 21:08:29.517531 26928 traceroute.cc:147] R: 12 S: 195.73k R: 28.67k PreP: 18.11 RmnP: 33.72 IfCnt: 757006 FwIfCnt: 92
+I1212 21:08:34.517740 26928 traceroute.cc:147] R: 12 S: 186.61k R: 27.43k PreP: 18.11 RmnP: 32.93 IfCnt: 758025 FwIfCnt: 93
+I1212 21:08:39.518036 26928 traceroute.cc:147] R: 12 S: 208.49k R: 28.76k PreP: 18.11 RmnP: 32.05 IfCnt: 758953 FwIfCnt: 93
+I1212 21:08:44.518232 26928 traceroute.cc:147] R: 12 S: 177.18k R: 25.85k PreP: 18.11 RmnP: 31.30 IfCnt: 759774 FwIfCnt: 93
+I1212 21:08:49.518438 26928 traceroute.cc:147] R: 13 S: 204.36k R: 28.08k PreP: 18.11 RmnP: 30.50 IfCnt: 760615 FwIfCnt: 93
+I1212 21:08:54.518666 26928 traceroute.cc:147] R: 13 S: 201.62k R: 17.81k PreP: 18.11 RmnP: 29.46 IfCnt: 761823 FwIfCnt: 93
+I1212 21:08:59.518833 26928 traceroute.cc:147] R: 13 S: 205.76k R: 14.67k PreP: 18.11 RmnP: 28.46 IfCnt: 762783 FwIfCnt: 93
+I1212 21:09:04.519008 26928 traceroute.cc:147] R: 13 S: 185.01k R: 12.97k PreP: 18.11 RmnP: 27.54 IfCnt: 763517 FwIfCnt: 94
+I1212 21:09:09.519248 26928 traceroute.cc:147] R: 13 S: 193.85k R: 13.88k PreP: 18.11 RmnP: 26.63 IfCnt: 764281 FwIfCnt: 95
+I1212 21:09:14.519429 26928 traceroute.cc:147] R: 14 S: 195.99k R: 11.48k PreP: 18.11 RmnP: 26.02 IfCnt: 764808 FwIfCnt: 95
+I1212 21:09:19.519639 26928 traceroute.cc:147] R: 14 S: 223.26k R: 10.15k PreP: 18.11 RmnP: 25.51 IfCnt: 765129 FwIfCnt: 95
+I1212 21:09:24.519819 26928 traceroute.cc:147] R: 14 S: 205.49k R:  9.65k PreP: 18.11 RmnP: 25.04 IfCnt: 765340 FwIfCnt: 95
+I1212 21:09:29.520097 26928 traceroute.cc:147] R: 14 S: 190.92k R:  9.09k PreP: 18.11 RmnP: 24.63 IfCnt: 765516 FwIfCnt: 95
+I1212 21:09:34.520265 26928 traceroute.cc:147] R: 15 S: 213.70k R:  8.96k PreP: 18.11 RmnP: 24.27 IfCnt: 765626 FwIfCnt: 95
+I1212 21:09:39.520478 26928 traceroute.cc:147] R: 15 S: 226.78k R:  7.21k PreP: 18.11 RmnP: 23.95 IfCnt: 765675 FwIfCnt: 95
+I1212 21:09:44.520666 26928 traceroute.cc:147] R: 15 S: 209.43k R:  6.22k PreP: 18.11 RmnP: 23.62 IfCnt: 765706 FwIfCnt: 95
+I1212 21:09:49.520874 26928 traceroute.cc:147] R: 15 S: 193.44k R:  6.17k PreP: 18.11 RmnP: 23.36 IfCnt: 765741 FwIfCnt: 95
+I1212 21:09:54.521050 26928 traceroute.cc:147] R: 16 S: 196.08k R:  3.39k PreP: 18.11 RmnP: 23.14 IfCnt: 765773 FwIfCnt: 95
+I1212 21:09:59.521220 26928 traceroute.cc:147] R: 16 S: 192.38k R:  1.14k PreP: 18.11 RmnP: 22.96 IfCnt: 765797 FwIfCnt: 95
+I1212 21:10:04.521416 26928 traceroute.cc:147] R: 16 S: 203.91k R:  1.10k PreP: 18.11 RmnP: 22.76 IfCnt: 765815 FwIfCnt: 95
+I1212 21:10:09.521641 26928 traceroute.cc:147] R: 17 S: 218.03k R:  1.22k PreP: 18.11 RmnP: 12.65 IfCnt: 765830 FwIfCnt: 95
+I1212 21:10:14.521900 26928 traceroute.cc:147] R: 23 S: 47.51k R:  1.02k PreP: 18.11 RmnP:  0.01 IfCnt: 765963 FwIfCnt: 95
+I1212 21:10:19.522176 26928 traceroute.cc:147] R: 28 S:  0.58k R:  0.08k PreP: 18.11 RmnP:  0.00 IfCnt: 766001 FwIfCnt: 95
+I1212 21:10:24.522478 26928 traceroute.cc:147] R: 33 S:  0.14k R:  0.01k PreP: 18.11 RmnP:  0.00 IfCnt: 766004 FwIfCnt: 95
+I1212 21:10:26.434733 26927 traceroute.cc:535] Scan finished.
+I1212 21:10:26.435346 26927 traceroute.cc:542] Main probing finished (Took 721 seconds).
+I1212 21:10:27.435513 26927 traceroute.cc:631] Average Sending Rate:         187.58 Kpps
+I1212 21:10:27.435570 26927 traceroute.cc:633] Average Receving Rate:        17.15 Kpps
+I1212 21:10:27.435580 26927 traceroute.cc:635] Sent packets:                 150432247
+I1212 21:10:27.435588 26927 traceroute.cc:637] Received packets:             13753970
+I1212 21:10:27.435596 26927 traceroute.cc:639] Dropped responses:            102008
+I1212 21:10:27.435603 26927 traceroute.cc:641] Checksum Mistatches:          5724
+I1212 21:10:27.435611 26927 traceroute.cc:643] Distance Abnormalities:       96284
+I1212 21:10:27.435618 26927 traceroute.cc:645] Sent probes:                  135970300
+I1212 21:10:27.435626 26927 traceroute.cc:646] Sent preprobes:               14461947
+I1212 21:10:27.435632 26927 traceroute.cc:648] Interfaces Forward-probing:   95
+I1212 21:10:27.435640 26927 traceroute.cc:650] Interfaces Backward-probing:  766004
+I1212 21:10:27.435741 26927 traceroute.cc:655] Discovered Interfaces:        766063
+I1212 21:10:27.435760 26927 main.cc:336] The program ends.
