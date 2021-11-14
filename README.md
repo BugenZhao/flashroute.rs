@@ -25,6 +25,9 @@ Compared to the original implementation, the main features of *flashroute.rs* ar
 - `grain` option and hashmap-based data structure allows richer probing patterns.
 - Produce human-readable results and even [visualization](res/fr_huge.png) of network topology.
 
+## Dependencies
+The graphviz package is required to produce PNG files, otherwise you'll only have a .dot file, that you'll need to convert to an SVG.
+
 ## Usage
 *flashroute.rs* requires Rust stable toolchain (>= 1.48.0). 
 - Probe random hosts selected from each /30 (provided by `grain`) subnet of `202.120.0.0`, NIC specification is optional
